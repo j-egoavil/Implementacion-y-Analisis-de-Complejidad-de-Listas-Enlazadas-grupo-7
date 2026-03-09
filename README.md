@@ -36,10 +36,13 @@ Además, se realizan **pruebas experimentales de rendimiento** para comparar las
 ```
 data-structures-analysis/
 │
-├── README.md
+├─ README.md
+├─ .gitignore
+│
 ├── docs/
 │   ├── informe.pdf
-│   └── graficas/
+│   ├── graficas/
+│   └── tablas/
 │
 ├── data/
 │   ├── list/
@@ -81,6 +84,9 @@ data-structures-analysis/
 │               └── RandomGenerator.java
 │
 └── tests/
+    ├── TestList.java
+    ├── TestStack.java
+    └── TestQueue.java
 ```
 
 ---
