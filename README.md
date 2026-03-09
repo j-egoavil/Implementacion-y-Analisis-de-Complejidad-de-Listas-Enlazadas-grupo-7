@@ -47,34 +47,35 @@ data-structures-analysis/
 │   └── queue/
 │
 ├── scripts/
-│   └── graficar_resultados.py
+│   ├── graficar_resultados.py
+│   └── procesar_datos.py
 │
 ├── src/
 │   └── main/
 │       └── java/
-│
+│           │
 │           ├── Main.java
-│
+│           │
 │           ├── list/
 │           │   ├── Node.java
 │           │   ├── SinglyLinkedList.java
 │           │   ├── SinglyLinkedListWithTail.java
 │           │   ├── DoublyLinkedList.java
 │           │   └── DoublyLinkedListWithTail.java
-│
+│           │
 │           ├── stack/
 │           │   ├── MyStack.java
 │           │   └── ArrayStack.java
-│
+│           │
 │           ├── queue/
 │           │   ├── MyQueue.java
 │           │   └── CircularArrayQueue.java
-│
+│           │
 │           ├── benchmark/
 │           │   ├── ListBenchmark.java
 │           │   ├── StackBenchmark.java
 │           │   └── QueueBenchmark.java
-│
+│           │
 │           └── utils/
 │               ├── Timer.java
 │               └── RandomGenerator.java
