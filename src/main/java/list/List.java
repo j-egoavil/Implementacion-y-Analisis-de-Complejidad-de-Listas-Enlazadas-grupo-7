@@ -5,11 +5,10 @@ public interface List <T>{
     void pushBack(T value);
     T popFront();
     T popBack();
-    boolean empty();
+    boolean isEmpty();
     T topFront();
     T topBack();
     int size();
-
     Position<T> find(T value);
     void erase(Position<T> position);
     void addBefore(Position<T> position, T value);
