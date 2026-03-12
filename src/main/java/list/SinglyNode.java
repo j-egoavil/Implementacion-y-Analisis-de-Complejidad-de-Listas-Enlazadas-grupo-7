@@ -24,4 +24,9 @@ public class SinglyNode<T> implements Position<T>{
     public void setValue(T value) {
         this.value = value;
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
 }

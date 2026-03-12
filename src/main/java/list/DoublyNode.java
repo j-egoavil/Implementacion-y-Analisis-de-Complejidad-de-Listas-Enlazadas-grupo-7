@@ -35,4 +35,9 @@ public class DoublyNode<T> implements Position<T>{
     public void setPrev(DoublyNode<T> prev) {
         this.prev = prev;
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
 }
