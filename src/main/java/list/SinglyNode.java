@@ -1,8 +1,8 @@
 package list;
 
 public class SinglyNode<T> implements Position<T>{
-    T value;
-    SinglyNode<T> next;
+    private T value;
+    private SinglyNode<T> next;
 
     public SinglyNode(T value){
         this.value = value;

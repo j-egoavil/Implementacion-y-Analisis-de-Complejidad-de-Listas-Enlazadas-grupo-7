@@ -1,9 +1,9 @@
 package list;
 
 public class DoublyNode<T> implements Position<T>{
-    T value;
-    DoublyNode<T> next;
-    DoublyNode<T> prev;
+    private T value;
+    private DoublyNode<T> next;
+    private DoublyNode<T> prev;
 
     public DoublyNode(T value){
         this.value = value;
