@@ -44,7 +44,7 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override
