@@ -8,7 +8,7 @@ public class DoublyLinkedListTail<T> implements ListADT<T>{
     public DoublyLinkedListTail(){
         this.size = 0;
     }
-    
+
     private static class Node<T> implements Position<T>{
         private T value;
         private Node<T> next;
