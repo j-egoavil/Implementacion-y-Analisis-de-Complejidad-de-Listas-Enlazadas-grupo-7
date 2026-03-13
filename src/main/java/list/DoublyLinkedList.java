@@ -1,13 +1,19 @@
 package list;
 
 public class DoublyLinkedList<T> implements ListADT<T>{
+    private Node<T> head;
+    private int size;
 
-    private static class DoublyNode<T> implements Position<T>{
+    public DoublyLinkedList(){
+        this.size = 0;
+    }
+
+    private static class Node<T> implements Position<T>{
         private T value;
-        private DoublyNode<T> next;
-        private DoublyNode<T> prev;
+        private Node<T> next;
+        private Node<T> prev;
 
-        public DoublyNode(T value){
+        public Node(T value){
             this.value = value;
             this.next = null;
             this.prev = null;
@@ -15,10 +21,10 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
         @Override
         public T getValue() {
-            return null;
+            return value;
         }
     }
-    
+
     @Override
     public void pushFront(T value) {
 

@@ -1,19 +1,23 @@
 package list;
 
-public class SinglyLinkedList<T> implements ListADT<T> {
+public class DoublyLinkedListTail<T> implements ListADT<T>{
     private Node<T> head;
+    private Node<T> tail;
     private int size;
 
-    public SinglyLinkedList(){
+    public DoublyLinkedListTail(){
         this.size = 0;
     }
-
+    
     private static class Node<T> implements Position<T>{
         private T value;
         private Node<T> next;
+        private Node<T> prev;
 
         public Node(T value){
             this.value = value;
+            this.next = null;
+            this.prev = null;
         }
 
         @Override
@@ -21,7 +25,6 @@ public class SinglyLinkedList<T> implements ListADT<T> {
             return value;
         }
     }
-
     @Override
     public void pushFront(T value) {
 
