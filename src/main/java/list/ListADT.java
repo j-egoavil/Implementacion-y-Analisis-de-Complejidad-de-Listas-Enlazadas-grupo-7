@@ -1,6 +1,6 @@
 package list;
 
-public interface List <T>{
+public interface ListADT<T>{
     void pushFront(T value);
     void pushBack(T value);
     T popFront();

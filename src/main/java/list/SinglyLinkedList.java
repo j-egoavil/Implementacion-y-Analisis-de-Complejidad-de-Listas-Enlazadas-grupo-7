@@ -1,6 +1,6 @@
 package list;
 
-public class SinglyLinkedList<T> implements List<T> {
+public class SinglyLinkedList<T> implements ListADT<T> {
     private SinglyNode<T> next;
     private int size;
 
