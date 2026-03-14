@@ -97,7 +97,7 @@ public class SinglyLinkedList<T> implements ListADT<T> {
     @Override
     public T topBack() {
         if(head == null) throw new IllegalStateException("The list is Empty.");
-        
+
         Node<T> aux = head;
         while (aux.next != null){
             aux = aux.next;
@@ -112,6 +112,13 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public Position<T> find(T value) {
+        Node<T> aux = head;
+        while(aux != null){
+            if(aux.value.equals(value)){
+                return aux;
+            }
+            aux = aux.next;
+        }
         return null;
     }
 
