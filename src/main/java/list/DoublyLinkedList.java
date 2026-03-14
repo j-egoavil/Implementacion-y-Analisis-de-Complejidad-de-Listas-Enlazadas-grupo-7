@@ -79,7 +79,24 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public T popBack() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+
+        if(head.next == null){
+            T deleted = head.value;
+            head = null;
+            size--;
+            return deleted;
+        }
+
+        Node<T> aux = head;
+        while(aux.next != null){
+            aux = aux.next;
+        }
+        T deleted = aux.value;
+        aux.prev.next = null;
+        aux.prev = null;
+        size--;
+        return deleted;
     }
 
     @Override
@@ -111,6 +128,13 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public Position<T> find(T value) {
+        Node<T> aux = head;
+        while(aux != null){
+            if(aux.value.equals(value)){
+                return aux;
+            }
+            aux = aux.next;
+        }
         return null;
     }
 
