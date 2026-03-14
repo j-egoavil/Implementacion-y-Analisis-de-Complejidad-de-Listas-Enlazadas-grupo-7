@@ -89,12 +89,20 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public T topFront() {
-        return null;
+        if(head == null) throw new IllegalStateException("The list is Empty.");
+
+        return head.value;
     }
 
     @Override
     public T topBack() {
-        return null;
+        if(head == null) throw new IllegalStateException("The list is Empty.");
+        
+        Node<T> aux = head;
+        while (aux.next != null){
+            aux = aux.next;
+        }
+        return aux.value;
     }
 
     @Override
