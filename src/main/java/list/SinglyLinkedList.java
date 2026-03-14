@@ -32,7 +32,20 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public void pushBack(T value) {
+        Node<T> newNode = new Node<>(value);
 
+        if(head == null){
+            head = newNode;
+            size++;
+            return;
+        }
+        Node<T> aux = head;
+        while(aux.next != null){
+            aux = aux.next;
+        }
+        aux.next = newNode;
+        newNode.next = null;
+        size++;
     }
 
     @Override
