@@ -50,7 +50,11 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public T popFront() {
-        return null;
+        if(head == null) throw new IllegalStateException("The list is empty.");
+        T deleted = head.value;
+        head = head.next;
+        size--;
+        return deleted;
     }
 
     @Override
