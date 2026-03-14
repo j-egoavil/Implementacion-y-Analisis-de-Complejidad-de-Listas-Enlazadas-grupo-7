@@ -62,7 +62,19 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public T popFront() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+
+        T deleted = head.value;
+
+        if(head.next == null){
+            head = null;
+            size--;
+            return deleted;
+        }
+        head = head.next;
+        head.prev = null;
+        size--;
+        return deleted;
     }
 
     @Override
