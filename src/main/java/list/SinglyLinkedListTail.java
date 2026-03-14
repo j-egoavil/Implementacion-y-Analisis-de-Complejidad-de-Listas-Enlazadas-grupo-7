@@ -65,6 +65,7 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
             size--;
             return deleted;
         }
+
         T deleted = head.value;
         head = head.next;
         size--;
@@ -73,7 +74,25 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public T popBack() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+
+        if(head == tail){
+            T deleted = head.value;
+            head = null;
+            tail = null;
+            size--;
+            return deleted;
+        }
+
+        T deleted = tail.value;
+        Node<T> aux = head;
+        while (aux.next.next != null){
+            aux = aux.next;
+        }
+        tail = aux;
+        tail.next = null;
+        size--;
+        return deleted;
     }
 
     @Override
