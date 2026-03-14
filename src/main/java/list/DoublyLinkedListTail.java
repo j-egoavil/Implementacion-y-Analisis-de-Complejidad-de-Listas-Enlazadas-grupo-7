@@ -25,9 +25,22 @@ public class DoublyLinkedListTail<T> implements ListADT<T>{
             return value;
         }
     }
+
     @Override
     public void pushFront(T value) {
+        Node<T> newNode = new Node<>(value);
 
+        if(isEmpty()){
+            head = newNode;
+            tail = newNode;
+            size++;
+            return;
+        }
+
+        newNode.next = head;
+        head.prev = newNode;
+        head = newNode;
+        size++;
     }
 
     @Override
@@ -47,26 +60,37 @@ public class DoublyLinkedListTail<T> implements ListADT<T>{
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     @Override
     public T topFront() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+
+        return head.value;
     }
 
     @Override
     public T topBack() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+
+        return tail.value;
     }
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override
     public Position<T> find(T value) {
+        Node<T> aux = head;
+        while(aux != null){
+            if(aux.value.equals(value)){
+                return aux;
+            }
+            aux = aux.next;
+        }
         return null;
     }
 
