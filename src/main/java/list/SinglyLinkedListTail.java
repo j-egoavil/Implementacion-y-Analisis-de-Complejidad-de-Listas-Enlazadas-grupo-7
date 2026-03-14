@@ -120,6 +120,13 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public Position<T> find(T value) {
+        Node<T> aux = head;
+        while(aux != null){
+            if(aux.value.equals(value)){
+                return aux;
+            }
+            aux = aux.next;
+        }
         return null;
     }
 
