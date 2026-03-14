@@ -34,6 +34,7 @@ public class DoublyLinkedList<T> implements ListADT<T>{
             size++;
             return;
         }
+
         newNode.next = head;
         head.prev = newNode;
         head = newNode;
@@ -42,7 +43,21 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public void pushBack(T value) {
+        Node<T> newNode = new Node<>(value);
 
+        if(isEmpty()){
+            head = newNode;
+            size++;
+            return;
+        }
+
+        Node<T> aux = head;
+        while(aux.next != null){
+            aux = aux.next;
+        }
+        newNode.prev = aux;
+        aux.next = newNode;
+        size++;
     }
 
     @Override
