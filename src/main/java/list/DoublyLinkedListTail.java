@@ -45,11 +45,24 @@ public class DoublyLinkedListTail<T> implements ListADT<T>{
 
     @Override
     public void pushBack(T value) {
+        Node<T> newNode = new Node<>(value);
 
+        if(isEmpty()){
+            head = newNode;
+            tail = newNode;
+            size++;
+            return;
+        }
+
+        newNode.prev = tail;
+        tail.next = newNode;
+        tail = newNode;
+        size++;
     }
 
     @Override
     public T popFront() {
+        T deleted = head.value;
         return null;
     }
 
