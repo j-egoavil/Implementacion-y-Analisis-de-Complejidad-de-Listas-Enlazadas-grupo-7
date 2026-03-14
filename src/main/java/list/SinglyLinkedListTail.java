@@ -56,6 +56,9 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public T popFront() {
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+
+
         return null;
     }
 
@@ -71,17 +74,19 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public T topFront() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+        return head.value;
     }
 
     @Override
     public T topBack() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+        return tail.value;
     }
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override
