@@ -71,6 +71,7 @@ public class DoublyLinkedList<T> implements ListADT<T>{
             size--;
             return deleted;
         }
+
         head = head.next;
         head.prev = null;
         size--;
