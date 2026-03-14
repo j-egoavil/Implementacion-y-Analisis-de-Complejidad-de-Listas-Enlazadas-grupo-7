@@ -24,7 +24,19 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
     }
     @Override
     public void pushFront(T value) {
+        Node<T> newNode = new Node<>(value);
 
+        if(isEmpty()){
+            head = newNode;
+            tail = newNode;
+            head.next = null;
+            size++;
+            return;
+        }
+        Node<T> oldHead = head;
+        head = newNode;
+        head.next = oldHead;
+        size++;
     }
 
     @Override
@@ -44,7 +56,7 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     @Override
