@@ -47,22 +47,29 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     @Override
     public T topFront() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
+        return head.value;
     }
 
     @Override
     public T topBack() {
-        return null;
+        if(isEmpty()) throw new IllegalStateException("The list is Empty.");
+
+        Node<T> aux = head;
+        while (aux.next != null){
+            aux = aux.next;
+        }
+        return aux.value;
     }
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override

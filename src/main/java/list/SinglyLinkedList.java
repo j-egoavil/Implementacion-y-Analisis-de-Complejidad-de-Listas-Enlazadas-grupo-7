@@ -52,7 +52,7 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public T popFront() {
-        if(head == null) throw new IllegalStateException("The list is empty.");
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
 
         T deleted = head.value;
         head = head.next;
@@ -62,7 +62,7 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public T popBack() {
-        if(head == null) throw new IllegalStateException("The list is empty.");
+        if(isEmpty()) throw new IllegalStateException("The list is empty.");
 
         if (head.next == null) {
             T deleted = head.value;
@@ -89,14 +89,14 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public T topFront() {
-        if(head == null) throw new IllegalStateException("The list is Empty.");
+        if(isEmpty()) throw new IllegalStateException("The list is Empty.");
 
         return head.value;
     }
 
     @Override
     public T topBack() {
-        if(head == null) throw new IllegalStateException("The list is Empty.");
+        if(isEmpty()) throw new IllegalStateException("The list is Empty.");
 
         Node<T> aux = head;
         while (aux.next != null){
