@@ -24,7 +24,10 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public void pushFront(T value) {
-
+        Node<T> newNode = new Node<>(value);
+        newNode.next = head;
+        head = newNode;
+        size++;
     }
 
     @Override
