@@ -27,7 +27,17 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public void pushFront(T value) {
+        Node<T> newNode = new Node<>(value);
 
+        if(isEmpty()){
+            head = newNode;
+            size++;
+            return;
+        }
+        newNode.next = head;
+        head.prev = newNode;
+        head = newNode;
+        size++;
     }
 
     @Override
