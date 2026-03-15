@@ -132,7 +132,38 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public void erase(Position<T> position) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> target = (Node<T>) position;
+        if(head == tail && target == head){
+            head = null;
+            tail = null;
+            size--;
+            return;
+        }
+        if(target == head){
+            head = head.next;
+            size--;
+            return;
+        }
+
+        Node<T> aux = head;
+        while (aux.next != null && aux.next != target){
+            aux = aux.next;
+        }
+        if(aux.next == null) throw new IllegalArgumentException("The position does not exist in the list.");
+
+        if(target == tail){
+            tail = aux;
+            aux.next = target.next;
+            size--;
+            target.next = null;
+            return;
+        }
+
+        aux.next = aux.next.next;
+        size--;
+        target.next = null;
     }
 
     @Override
