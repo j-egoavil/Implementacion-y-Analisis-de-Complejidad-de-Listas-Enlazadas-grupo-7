@@ -168,7 +168,26 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public void addBefore(Position<T> position, T value) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> newNode = new Node<>(value);
+        Node<T> target = (Node<T>) position;
+        if(target == head){
+            newNode.next = head;
+            head = newNode;
+            size++;
+            return;
+        }
+
+        Node<T> aux = head;
+        while (aux.next != null && aux.next != target ){
+            aux = aux.next;
+        }
+        if(aux.next == null) throw new IllegalArgumentException("The position does not exist in the list.");
+
+        newNode.next = target;
+        aux.next =newNode;
+        size++;
     }
 
     @Override
