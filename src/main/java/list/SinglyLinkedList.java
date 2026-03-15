@@ -124,7 +124,24 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public void erase(Position<T> position) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> target = (Node<T>) position;
+        if(target == head){
+            head = head.next;
+            size--;
+            return;
+        }
+
+        Node<T> aux = head;
+        while (aux.next != target && aux.next != null){
+            aux = aux.next;
+        }
+        if(aux.next == null) throw new IllegalArgumentException("The position does not exist in the list.");
+
+        aux.next = aux.next.next;
+        size--;
+        target.next = null;
     }
 
     @Override
