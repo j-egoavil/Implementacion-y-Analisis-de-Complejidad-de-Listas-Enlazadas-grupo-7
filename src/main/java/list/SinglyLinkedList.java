@@ -134,7 +134,7 @@ public class SinglyLinkedList<T> implements ListADT<T> {
         }
 
         Node<T> aux = head;
-        while (aux.next != target && aux.next != null){
+        while (aux.next != null && aux.next != target){
             aux = aux.next;
         }
         if(aux.next == null) throw new IllegalArgumentException("The position does not exist in the list.");
@@ -158,7 +158,7 @@ public class SinglyLinkedList<T> implements ListADT<T> {
         }
 
         Node<T> aux = head;
-        while (aux.next != target && aux.next != null){
+        while (aux.next != null && aux.next != target ){
             aux = aux.next;
         }
         if(aux.next == null) throw new IllegalArgumentException("The position does not exist in the list.");
@@ -170,6 +170,18 @@ public class SinglyLinkedList<T> implements ListADT<T> {
 
     @Override
     public void addAfter(Position<T> position, T value) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> newNode = new Node<>(value);
+        Node<T> target = (Node<T>) position;
+        Node<T> aux = head;
+        while (aux != null && aux != target ){
+            aux = aux.next;
+        }
+        if(aux == null) throw new IllegalArgumentException("The position does not exist in the list.");
+
+        newNode.next = target.next;
+        target.next = newNode;
+        size++;
     }
 }
