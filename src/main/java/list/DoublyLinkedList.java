@@ -159,12 +159,6 @@ public class DoublyLinkedList<T> implements ListADT<T>{
             return;
         }
 
-        Node<T> aux = head;
-        while (aux != null && aux != target){
-            aux = aux.next;
-        }
-        if(aux == null) throw new IllegalArgumentException("The position does not exist in the list.");
-
         if(target.next == null){
             target.prev.next = null;
             size--;
@@ -174,6 +168,8 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
         target.prev.next = target.next;
         target.next.prev = target.prev;
+        target.prev = null;
+        target.next = null;
         size--;
     }
 
@@ -191,12 +187,6 @@ public class DoublyLinkedList<T> implements ListADT<T>{
             size++;
             return;
         }
-
-        Node<T> aux = head;
-        while (aux != null && aux != target){
-            aux = aux.next;
-        }
-        if(aux == null) throw new IllegalArgumentException("The position does not exist in the list.");
 
         target.prev.next = newNode;
         newNode.prev = target.prev;
@@ -218,12 +208,6 @@ public class DoublyLinkedList<T> implements ListADT<T>{
             size++;
             return;
         }
-
-        Node<T> aux = head;
-        while (aux != null && aux != target){
-            aux = aux.next;
-        }
-        if(aux == null) throw new IllegalArgumentException("The position does not exist in the list.");
 
         newNode.next = target.next;
         newNode.prev = target;
