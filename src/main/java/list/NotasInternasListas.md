@@ -80,6 +80,4 @@ Ejemplo conceptual:
 **Importante:** el tiempo total de benchmark debe contemplar tanto la búsqueda como la modificación.
 
 ## Estado actual de implementación
-Actualmente ya están implementados los métodos base de inserción, eliminación por extremos, consulta por extremos, tamaño, vacío y búsqueda.
-
-Los métodos que dependen de la referencia retornada (`erase`, `addBefore`, `addAfter`) se continúan implementando bajo esta misma decisión de diseño.
+### Implementación finalizada
