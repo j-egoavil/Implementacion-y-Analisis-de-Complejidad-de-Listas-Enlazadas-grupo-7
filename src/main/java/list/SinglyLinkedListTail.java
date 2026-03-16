@@ -32,9 +32,8 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
             size++;
             return;
         }
-        Node<T> oldHead = head;
+        newNode.next = head;
         head = newNode;
-        head.next = oldHead;
         size++;
     }
 
@@ -48,9 +47,8 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
             size++;
             return;
         }
-        Node<T> oldTail = tail;
+        tail.next = newNode;
         tail = newNode;
-        oldTail.next = tail;
         size++;
     }
 
@@ -148,10 +146,9 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
         }
 
         Node<T> aux = head;
-        while (aux.next != null && aux.next != target){
+        while (aux.next != target){
             aux = aux.next;
         }
-        if(aux.next == null) throw new IllegalArgumentException("The position does not exist in the list.");
 
         if(target == tail){
             tail = aux;
@@ -180,10 +177,9 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
         }
 
         Node<T> aux = head;
-        while (aux.next != null && aux.next != target ){
+        while (aux.next != target ){
             aux = aux.next;
         }
-        if(aux.next == null) throw new IllegalArgumentException("The position does not exist in the list.");
 
         newNode.next = target;
         aux.next =newNode;
@@ -199,22 +195,12 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
         Node<T> newNode = new Node<>(value);
         Node<T> target = (Node<T>) position;
 
-        Node<T> aux = head;
-        while (aux != null && aux != target) {
-            aux = aux.next;
-        }
-
-        if (aux == null) {
-            throw new IllegalArgumentException("The position does not exist in the list.");
-        }
-
         newNode.next = target.next;
         target.next = newNode;
 
         if (target == tail) {
             tail = newNode;
         }
-
         size++;
     }
 }
