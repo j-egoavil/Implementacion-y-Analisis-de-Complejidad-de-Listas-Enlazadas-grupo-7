@@ -179,7 +179,30 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public void addBefore(Position<T> position, T value) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> newNode = new Node<>(value);
+
+        Node<T> target = (Node<T>) position;
+        if(target == head){
+            newNode.next = head;
+            head.prev = newNode;
+            head = newNode;
+            size++;
+            return;
+        }
+
+        Node<T> aux = head;
+        while (aux != null && aux != target){
+            aux = aux.next;
+        }
+        if(aux == null) throw new IllegalArgumentException("The position does not exist in the list.");
+
+        target.prev.next = newNode;
+        newNode.prev = target.prev;
+        newNode.next = target;
+        target.prev = newNode;
+        size++;
     }
 
     @Override
