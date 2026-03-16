@@ -65,7 +65,6 @@ public class DoublyLinkedList<T> implements ListADT<T>{
         if(isEmpty()) throw new IllegalStateException("The list is empty.");
 
         T deleted = head.value;
-
         if(head.next == null){
             head = null;
             size--;
@@ -178,8 +177,8 @@ public class DoublyLinkedList<T> implements ListADT<T>{
         if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
         Node<T> newNode = new Node<>(value);
-
         Node<T> target = (Node<T>) position;
+
         if(target == head){
             newNode.next = head;
             head.prev = newNode;
@@ -200,8 +199,8 @@ public class DoublyLinkedList<T> implements ListADT<T>{
         if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
         Node<T> newNode = new Node<>(value);
-
         Node<T> target = (Node<T>) position;
+
         if(target.next == null){
             newNode.prev = target;
             target.next = newNode;

@@ -107,7 +107,6 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
     @Override
     public T topBack() {
         if(isEmpty()) throw new IllegalStateException("The list is empty.");
-
         return tail.value;
     }
 
@@ -169,6 +168,7 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
         Node<T> newNode = new Node<>(value);
         Node<T> target = (Node<T>) position;
+
         if(target == head){
             newNode.next = head;
             head = newNode;
@@ -188,9 +188,7 @@ public class SinglyLinkedListTail<T>  implements ListADT<T>{
 
     @Override
     public void addAfter(Position<T> position, T value) {
-        if (position == null) {
-            throw new IllegalArgumentException("Position can not be null.");
-        }
+        if (position == null) throw new IllegalArgumentException("Position can not be null.");
 
         Node<T> newNode = new Node<>(value);
         Node<T> target = (Node<T>) position;

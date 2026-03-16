@@ -112,7 +112,6 @@ public class SinglyLinkedList<T> implements ListADT<T> {
     @Override
     public Position<T> find(T value) {
         Node<T> aux = head;
-
         while(aux != null){
             if(aux.value.equals(value)){
                 return aux;
@@ -158,7 +157,6 @@ public class SinglyLinkedList<T> implements ListADT<T> {
         }
 
         Node<T> aux = head;
-
         while (aux.next != target ){
             aux = aux.next;
         }

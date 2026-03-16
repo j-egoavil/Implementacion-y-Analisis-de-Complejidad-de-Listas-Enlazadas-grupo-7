@@ -173,11 +173,45 @@ public class DoublyLinkedListTail<T> implements ListADT<T>{
 
     @Override
     public void addBefore(Position<T> position, T value) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> newNode = new Node<>(value);
+        Node<T> target = (Node<T>) position;
+
+        if(target == head){
+            newNode.next = head;
+            head.prev = newNode;
+            head = newNode;
+            size++;
+            return;
+        }
+
+        newNode.next = target;
+        newNode.prev = target.prev;
+        target.prev.next = newNode;
+        target.prev = newNode;
+        size++;
     }
 
     @Override
     public void addAfter(Position<T> position, T value) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> newNode = new Node<>(value);
+        Node<T> target = (Node<T>) position;
+
+        if(target == tail){
+            tail.next = newNode;
+            newNode.prev = tail;
+            tail = newNode;
+            size++;
+            return;
+        }
+
+        newNode.next = target.next;
+        newNode.prev = target;
+        target.next.prev = newNode;
+        target.next = newNode;
+        size++;
     }
 }
