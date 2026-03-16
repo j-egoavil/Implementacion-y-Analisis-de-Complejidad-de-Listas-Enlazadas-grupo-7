@@ -141,7 +141,40 @@ public class DoublyLinkedList<T> implements ListADT<T>{
 
     @Override
     public void erase(Position<T> position) {
+        if(position == null) throw new IllegalArgumentException("Position can not be null.");
 
+        Node<T> target = (Node<T>) position;
+        if(target == head){
+            if(target.next == null){
+                head = null;
+                size--;
+                target.prev = null;
+                return;
+            }
+            head = head.next;
+            head.prev = null;
+            size--;
+            target.prev = null;
+            target.next = null;
+            return;
+        }
+
+        Node<T> aux = head;
+        while (aux != null && aux != target){
+            aux = aux.next;
+        }
+        if(aux == null) throw new IllegalArgumentException("The position does not exist in the list.");
+
+        if(target.next == null){
+            target.prev.next = null;
+            size--;
+            target.prev = null;
+            return;
+        }
+
+        target.prev.next = target.next;
+        target.next.prev = target.prev;
+        size--;
     }
 
     @Override
