@@ -1,3 +1,5 @@
+package stack;
+
 public class ArrayStack<T> implements MyStack<T> {
 
     private DynamicArray<T> array;

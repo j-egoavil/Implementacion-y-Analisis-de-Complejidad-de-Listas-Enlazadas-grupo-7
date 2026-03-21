@@ -1,3 +1,5 @@
+package stack;
+
 public class DynamicArray<T> {
 
     private T[] data;

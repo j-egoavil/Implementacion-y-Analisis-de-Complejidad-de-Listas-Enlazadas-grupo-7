@@ -1,3 +1,5 @@
+package queue;
+
 public interface MyQueue<T> {
 
     void enqueue(T x);

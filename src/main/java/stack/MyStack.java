@@ -1,3 +1,5 @@
+package stack;
+
 public interface MyStack<T> {
 
 	void push(T x);
