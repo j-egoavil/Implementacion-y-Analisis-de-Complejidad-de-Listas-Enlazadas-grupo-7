@@ -26,9 +26,11 @@ BenchmarkRunner usa propiedades del sistema para controlar la corrida:
 
 Valores por defecto actuales:
 
-- warmup = 1
-- repetitions = 2
+- warmup = 3
+- repetitions = 5
 - include10pow8 = false
+
+En graficas se recomienda usar median_ns como metrica principal para reducir el impacto de outliers.
 
 ## Conjunto de tamanos
 Cuando include10pow8 es false, la base de tamanos es:

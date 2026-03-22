@@ -48,14 +48,14 @@ public class BenchmarkRunner {
     }
 
     public static boolean include10Pow8() {
-        return Boolean.parseBoolean(System.getProperty("benchmark.include10pow8", "false"));
+        return Boolean.parseBoolean(System.getProperty("benchmark.include10pow8", "true"));
     }
 
     public static int warmupRuns() {
-        return Integer.parseInt(System.getProperty("benchmark.warmup", "1"));
+        return Integer.parseInt(System.getProperty("benchmark.warmup", "3"));
     }
 
     public static int measuredRuns() {
-        return Integer.parseInt(System.getProperty("benchmark.repetitions", "2"));
+        return Integer.parseInt(System.getProperty("benchmark.repetitions", "5"));
     }
 }

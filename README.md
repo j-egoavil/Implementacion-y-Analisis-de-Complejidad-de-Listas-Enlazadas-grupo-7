@@ -75,8 +75,8 @@ El paquete benchmark contiene:
 
 ### Configuracion por propiedades JVM
 
-- benchmark.warmup (default: 1)
-- benchmark.repetitions (default: 2)
+- benchmark.warmup (default: 3)
+- benchmark.repetitions (default: 5)
 - benchmark.include10pow8 (default: false)
 
 ### Tamanos base actuales
@@ -171,11 +171,33 @@ List:
 - scripts/graficar_comparacion.py
 - scripts/graficar_avanzadas.py
 
+### Ejecutar generacion completa de graficas
+
+Desde la raiz del proyecto:
+
+```powershell
+f:/repos/pruebas/.venv/Scripts/python.exe scripts/graficar_resultados.py
+f:/repos/pruebas/.venv/Scripts/python.exe scripts/graficar_comparacion.py
+f:/repos/pruebas/.venv/Scripts/python.exe scripts/graficar_avanzadas.py
+```
+
+Las imagenes se guardan en:
+
+- docs/graficas/individuales/
+- docs/graficas/comparaciones/
+- docs/graficas/avanzadas/
+
 ### Tipos de salida
 
 - individuales
 - comparaciones
 - avanzadas (pendiente log-log, speedup tail/no-tail, heatmaps y lineas por operacion)
+
+## Cambios recientes
+
+- Se ejecuto la suite completa de benchmarks con `Main` y se regeneraron los CSV en `data/`.
+- Se ejecuto `scripts/graficar_resultados.py` para reconstruir las graficas individuales.
+- Quedo documentado el flujo completo para volver a generar todas las graficas (individuales, comparativas y avanzadas).
 
 ## Notas internas por paquete
 

@@ -45,6 +45,8 @@ TARGET_SIZES = [10, 100, 1_000, 10_000, 100_000, 1_000_000]
 
 
 def y_column(df: pd.DataFrame) -> str:
+    if "median_ns" in df.columns:
+        return "median_ns"
     if "avg_time_ns" in df.columns:
         return "avg_time_ns"
     return "time"

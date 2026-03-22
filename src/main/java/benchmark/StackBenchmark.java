@@ -10,7 +10,9 @@ public class StackBenchmark {
 
     private static final int WARMUP = BenchmarkRunner.warmupRuns();
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
-    private static final int[] SIZES = BenchmarkRunner.sizes(BenchmarkRunner.include10Pow8());
+    private static final int[] CHEAP_SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000};
+    private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000, 100_000};
+    private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000};
 
     public static void runAll() {
         runOperation("push");
@@ -42,7 +44,8 @@ public class StackBenchmark {
         try {
             CSVWriter writer = new CSVWriter(csvPath, "size,avg_time_ns,median_ns,min_ns,max_ns");
 
-            for (int n : SIZES) {
+            int[] sizes = sizesFor(operationName);
+            for (int n : sizes) {
                 BenchmarkStats stats = BenchmarkRunner.run(
                     () -> measureOperation(operationName, n),
                     WARMUP,
@@ -110,5 +113,13 @@ public class StackBenchmark {
 
     private static int sampledOps(int n) {
         return Math.max(1, Math.min(50_000, n));
+    }
+
+    private static int[] sizesFor(String operationName) {
+        if ("delete".equals(operationName)) {
+            return VERY_EXPENSIVE_SIZES;
+        }
+        // push, pop, peek are O(1)
+        return CHEAP_SIZES;
     }
 }

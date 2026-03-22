@@ -14,6 +14,8 @@ QUEUE_DIR = OUTPUT_DIR / "queue"
 
 
 def y_column(df: pd.DataFrame) -> str:
+    if "median_ns" in df.columns:
+        return "median_ns"
     if "avg_time_ns" in df.columns:
         return "avg_time_ns"
     return "time"

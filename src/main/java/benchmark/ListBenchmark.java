@@ -16,9 +16,9 @@ public class ListBenchmark {
 
     private static final int WARMUP = BenchmarkRunner.warmupRuns();
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
-    private static final int[] BASE_SIZES = BenchmarkRunner.sizes(BenchmarkRunner.include10Pow8());
-    private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 100_000};
-    private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 100_000};
+    private static final int[] CHEAP_SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000};
+    private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000, 100_000};
+    private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000};
 
     public static void runAll() {
         runForImplementation("singly", SinglyLinkedList::new);
@@ -180,23 +180,38 @@ public class ListBenchmark {
     }
 
     private static int[] sizesFor(String implementationName, String operationName) {
+        // Very expensive: find, erase, add_before, add_after (O(n) with find)
         if (
-            ("singly".equals(implementationName) || "doubly".equals(implementationName)) &&
-            "push_back".equals(operationName)
-        ) {
-            return VERY_EXPENSIVE_SIZES;
-        }
-
-        if (
-            "pop_back".equals(operationName) ||
             "find".equals(operationName) ||
             "erase".equals(operationName) ||
             "add_before".equals(operationName) ||
             "add_after".equals(operationName)
         ) {
-            return EXPENSIVE_SIZES;
+            return VERY_EXPENSIVE_SIZES;
         }
-        return BASE_SIZES;
+
+        // Expensive: push_back and pop_back for implementations without tail
+        if ("push_back".equals(operationName)) {
+            if ("singly".equals(implementationName) || "doubly".equals(implementationName)) {
+                return EXPENSIVE_SIZES;
+            }
+            // singly_tail and doubly_tail push_back are O(1), use cheap
+            return CHEAP_SIZES;
+        }
+
+        if ("pop_back".equals(operationName)) {
+            if ("singly".equals(implementationName) || "doubly".equals(implementationName)) {
+                return EXPENSIVE_SIZES;
+            }
+            // singly_tail pop_back is O(n), doubly_tail is O(1)
+            if ("singly_tail".equals(implementationName)) {
+                return EXPENSIVE_SIZES;
+            }
+            return CHEAP_SIZES;
+        }
+
+        // Cheap: push_front, pop_front, top operations that are O(1)
+        return CHEAP_SIZES;
     }
 
     private static String csvPathFor(String implementationName, String operationName) {
