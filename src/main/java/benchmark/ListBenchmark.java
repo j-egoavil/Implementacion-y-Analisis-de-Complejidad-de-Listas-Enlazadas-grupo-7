@@ -19,7 +19,6 @@ public class ListBenchmark {
     private static final int[] CHEAP_SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000};
     private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000, 100_000};
     private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000};
-
     public static void runAll() {
         runForImplementation("singly", SinglyLinkedList::new);
         runForImplementation("singly_tail", SinglyLinkedListTail::new);
