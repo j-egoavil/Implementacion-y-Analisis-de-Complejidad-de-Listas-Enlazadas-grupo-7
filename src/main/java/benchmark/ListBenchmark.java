@@ -17,8 +17,8 @@ public class ListBenchmark {
     private static final int WARMUP = BenchmarkRunner.warmupRuns();
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
     private static final int[] BASE_SIZES = BenchmarkRunner.sizes(BenchmarkRunner.include10Pow8());
-    private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 100_000};
-    private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 100_000};
+    private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
+    private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
 
     public static void runAll() {
         runForImplementation("singly", SinglyLinkedList::new);
