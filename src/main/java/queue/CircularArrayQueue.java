@@ -75,11 +75,17 @@ public class CircularArrayQueue<T> implements MyQueue<T> {
     @Override
     public void delete(T n) {
         int currentSize = size;
+        boolean deleted = false;
 
         for (int i = 0; i < currentSize; i++) {
             T value = dequeue();
 
-            if (!value.equals(n)) {
+            if (!deleted && value.equals(n)) {
+                deleted = true;
+                continue;
+            }
+
+            if (value != null) {
                 enqueue(value);
             }
         }

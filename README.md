@@ -1,221 +1,194 @@
-# Implementación y Análisis de Complejidad de Listas, Pilas y Colas en Java
+# Implementacion y Analisis de Complejidad de Listas, Pilas y Colas en Java
 
-## Descripción
+## Descripcion
+Proyecto del curso Estructuras de Datos (2026-I) para implementar y analizar:
 
-Este proyecto corresponde a la tarea del curso **Estructuras de Datos (2026-I)**.
-El objetivo es implementar distintas estructuras de datos fundamentales en **Java** y realizar un **análisis teórico y experimental de su complejidad**.
+- 4 variantes de listas enlazadas
+- stack basado en arreglo dinamico
+- queue basada en arreglo circular dinamico
 
-Las estructuras implementadas son:
+El proyecto combina analisis teorico Big-O con medicion experimental y graficas.
 
-* **Listas enlazadas**
+## Estructuras implementadas
 
-  * Lista simplemente enlazada
-  * Lista simplemente enlazada con cola
-  * Lista doblemente enlazada
-  * Lista doblemente enlazada con cola
+### List
 
-* **Pilas (Stack)** implementadas con **arreglos dinámicos**
+Implementaciones:
 
-* **Colas (Queue)** implementadas con **arreglos circulares**
+- SinglyLinkedList
+- SinglyLinkedListTail
+- DoublyLinkedList
+- DoublyLinkedListTail
 
-Además, se realizan **pruebas experimentales de rendimiento** para comparar las implementaciones y verificar su complejidad utilizando **notación Big-O**.
+Contrato de ListADT:
 
----
+- pushFront
+- pushBack
+- popFront
+- popBack
+- isEmpty
+- topFront
+- topBack
+- size
+- find
+- erase
+- addBefore
+- addAfter
 
-# Objetivos
+Nota: se usa abstraccion Position<T> para las operaciones basadas en referencia.
 
-* Implementar estructuras de datos fundamentales sin utilizar librerías nativas de Java.
-* Analizar la complejidad teórica de los métodos principales.
-* Medir experimentalmente el tiempo de ejecución con distintos tamaños de entrada.
-* Comparar los resultados experimentales con la complejidad teórica.
+### Stack
 
----
+Implementacion: ArrayStack sobre DynamicArray.
 
-# Estructura del Proyecto
+Metodos:
+
+- push
+- pop
+- peek
+- isEmpty
+- size
+- delete
+
+### Queue
+
+Implementacion: CircularArrayQueue con resize dinamico.
+
+Metodos:
+
+- enqueue
+- dequeue
+- front
+- isEmpty
+- size
+- delete
+
+## Benchmarking actual
+
+El paquete benchmark contiene:
+
+- BenchmarkRunner
+- BenchmarkStats
+- ListBenchmark
+- StackBenchmark
+- QueueBenchmark
+
+### Configuracion por propiedades JVM
+
+- benchmark.warmup (default: 1)
+- benchmark.repetitions (default: 2)
+- benchmark.include10pow8 (default: false)
+
+### Tamanos base actuales
+
+Con benchmark.include10pow8=false:
+
+- 10, 100, 1_000, 10_000, 100_000, 1_000_000
+
+Con benchmark.include10pow8=true:
+
+- 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000
+
+### Formato de CSV
+
+Los benchmarks guardan:
+
+size,avg_time_ns,median_ns,min_ns,max_ns
+
+## Estructura real del proyecto
 
 ```
-data-structures-analysis/
-│
-├─ README.md
-├─ .gitignore
-│
-├── docs/
-│   ├── informe.pdf
-│   ├── graficas/
-│   └── tablas/
-│
+Implementacion-y-Analisis-de-Complejidad-de-Listas-Enlazadas-grupo-7/
+├── README.md
 ├── data/
-│   ├── list/
-│   ├── stack/
-│   └── queue/
-│
+│   ├── data-list/
+│   │   ├── list-singly/
+│   │   │   ├── no-tail/
+│   │   │   └── whit-tail/
+│   │   └── list-doubly/
+│   │       ├── no-tail/
+│   │       └── whit-tail/
+│   ├── data-stack/
+│   └── data-queue/
+├── docs/
+│   └── graficas/
 ├── scripts/
 │   ├── graficar_resultados.py
-│   └── procesar_datos.py
-│
-├── src/
-│   └── main/
-│       └── java/
-│           │
-│           ├── Main.java
-│           │
-│           ├── list/
-│           │   ├── Node.java
-│           │   ├── SinglyLinkedList.java
-│           │   ├── SinglyLinkedListWithTail.java
-│           │   ├── DoublyLinkedList.java
-│           │   └── DoublyLinkedListWithTail.java
-│           │
-│           ├── stack/
-│           │   ├── MyStack.java
-│           │   └── ArrayStack.java
-│           │
-│           ├── queue/
-│           │   ├── MyQueue.java
-│           │   └── CircularArrayQueue.java
-│           │
-│           ├── benchmark/
-│           │   ├── ListBenchmark.java
-│           │   ├── StackBenchmark.java
-│           │   └── QueueBenchmark.java
-│           │
-│           └── utils/
-│               ├── Timer.java
-│               └── RandomGenerator.java
-│
+│   ├── graficar_comparacion.py
+│   └── graficar_avanzadas.py
+├── src/main/java/
+│   ├── Main.java
+│   ├── benchmark/
+│   ├── list/
+│   ├── stack/
+│   ├── queue/
+│   └── utils/
 └── tests/
-    ├── TestList.java
-    ├── TestStack.java
-    └── TestQueue.java
 ```
 
----
+## Ejecucion
 
-# Estructuras Implementadas
+### Compilar
 
-## List
-
-Métodos implementados:
-
-* `pushFront()`
-* `pushBack()`
-* `popFront()`
-* `popBack()`
-* `find()`
-* `erase()`
-* `addBefore()`
-* `addAfter()`
-* `isEmpty()`
-
-Se implementaron **cuatro variantes de listas enlazadas** para comparar su eficiencia.
-
----
-
-## Stack (MyStack<T>)
-
-Implementación basada en **arreglos dinámicos**.
-
-Métodos:
-
-* `push(T x)`
-* `pop()`
-* `peek()`
-* `isEmpty()`
-* `size()`
-* `delete(T n)`
-
----
-
-## Queue (MyQueue<T>)
-
-Implementación basada en **arreglo circular dinámico**.
-
-Métodos:
-
-* `enqueue(T x)`
-* `dequeue()`
-* `front()`
-* `isEmpty()`
-* `size()`
-* `delete(T n)`
-
----
-
-# Medición de Complejidad
-
-Para evaluar el rendimiento de cada estructura se realizan pruebas con distintos tamaños de entrada:
+PowerShell:
 
 ```
-10
-100
-10^4
-10^6
-10^8
+$files = Get-ChildItem -Path src/main/java -Recurse -Filter *.java | Select-Object -ExpandProperty FullName
+& 'F:\Eclipse Adoptium\bin\javac.exe' -d out $files
 ```
 
-El tiempo de ejecución se mide utilizando **nanosegundos** mediante:
-
-```java
-System.nanoTime();
-```
-
-Los resultados se almacenan en archivos dentro de la carpeta:
+### Ejecutar suite completa
 
 ```
-data/
+& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main
 ```
 
----
+### Ejecutar benchmark selectivo
 
-# Visualización de Resultados
-
-Los datos obtenidos se grafican usando **Python y Matplotlib**.
-
-Las gráficas muestran:
+Stack:
 
 ```
-Tiempo de ejecución vs Tamaño de entrada
+& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main stack push
 ```
 
-Estas gráficas permiten comparar:
-
-* Implementaciones de listas
-* Stack vs Queue
-* Métodos equivalentes entre estructuras
-
----
-
-# Ejecución del Proyecto
-
-Compilar el proyecto:
+Queue:
 
 ```
-javac src/main/java/**/*.java
+& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main queue delete
 ```
 
-Ejecutar el programa principal:
+List:
 
 ```
-java src.main.java.Main
+& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main list singly push_front
 ```
 
-Esto ejecutará las pruebas de rendimiento y generará los datos experimentales.
+## Graficas
 
----
+### Scripts disponibles
+
+- scripts/graficar_resultados.py
+- scripts/graficar_comparacion.py
+- scripts/graficar_avanzadas.py
+
+### Tipos de salida
+
+- individuales
+- comparaciones
+- avanzadas (pendiente log-log, speedup tail/no-tail, heatmaps y lineas por operacion)
+
+## Notas internas por paquete
+
+Documentacion tecnica adicional:
+
+- src/main/java/list/NotasInternasListas.md
+- src/main/java/benchmark/README.md
+- src/main/java/queue/README.md
+- src/main/java/stack/README.md
+- src/main/java/utils/README.md
 
 ## Integrantes
+
 - Egovail Cardozo Juan Daniel
 - Romero Villalba Jean Pierre
-- Toro Moreno Kevin Andrés 
-
----
-
-# Conclusiones Esperadas
-
-A partir del análisis experimental se busca:
-
-* Identificar bajo qué condiciones es mejor usar **listas enlazadas o arreglos dinámicos**.
-* Comparar el comportamiento de **Stack y Queue** frente a diferentes tamaños de entrada.
-* Verificar si los resultados experimentales coinciden con la **complejidad teórica Big-O**.
-
----
+- Toro Moreno Kevin Andres
