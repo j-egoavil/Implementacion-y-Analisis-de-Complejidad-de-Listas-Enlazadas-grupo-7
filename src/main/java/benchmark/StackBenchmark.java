@@ -4,15 +4,11 @@ import stack.ArrayStack;
 import utils.Timer;
 import utils.CSVWriter;
 
-import java.util.Random;
-
 public class StackBenchmark {
 
     private static final int WARMUP = BenchmarkRunner.warmupRuns();
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
-    private static final int[] CHEAP_SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000};
-    private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000, 100_000};
-    private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000};
+    private static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
 
     public static void runAll() {
         runOperation("push");
@@ -67,59 +63,26 @@ public class StackBenchmark {
     }
 
     private static long measureOperation(String operationName, int n) {
-        return Timer.measure(() -> {
-            ArrayStack<Integer> stack = new ArrayStack<>();
-            Random random = new Random(17L * n + operationName.hashCode());
+        ArrayStack<Integer> stack = new ArrayStack<>();
+        for (int i = 0; i < n; i++) {
+            stack.push(i);
+        }
 
-            switch (operationName) {
-                case "push":
-                    for (int i = 0; i < n; i++) {
-                        stack.push(i);
-                    }
-                    break;
-                case "pop":
-                    for (int i = 0; i < n; i++) {
-                        stack.push(i);
-                    }
-                    for (int i = 0; i < n; i++) {
-                        stack.pop();
-                    }
-                    break;
-                case "peek":
-                    for (int i = 0; i < n; i++) {
-                        stack.push(i);
-                    }
-                    int sampledOps = sampledOps(n);
-                    for (int i = 0; i < sampledOps; i++) {
-                        stack.peek();
-                    }
-                    break;
-                case "delete":
-                    for (int i = 0; i < n; i++) {
-                        stack.push(i);
-                    }
-                    int deletions = Math.max(1, Math.min(1_000, n));
-                    for (int i = 0; i < deletions; i++) {
-                        int target = random.nextInt(n);
-                        stack.delete(target);
-                        stack.push(target);
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unsupported operation: " + operationName);
-            }
-        });
-    }
-
-    private static int sampledOps(int n) {
-        return Math.max(1, Math.min(50_000, n));
+        switch (operationName) {
+            case "push":
+                return Timer.measure(() -> stack.push(-1));
+            case "pop":
+                return Timer.measure(stack::pop);
+            case "peek":
+                return Timer.measure(stack::peek);
+            case "delete":
+                return Timer.measure(() -> stack.delete(0));
+            default:
+                throw new IllegalArgumentException("Unsupported operation: " + operationName);
+        }
     }
 
     private static int[] sizesFor(String operationName) {
-        if ("delete".equals(operationName)) {
-            return VERY_EXPENSIVE_SIZES;
-        }
-        // push, pop, peek are O(1)
-        return CHEAP_SIZES;
+        return SIZES;
     }
 }

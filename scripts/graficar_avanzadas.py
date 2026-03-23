@@ -41,7 +41,7 @@ LIST_OPS = [
     "add_after",
 ]
 
-TARGET_SIZES = [10, 100, 1_000, 10_000, 100_000, 1_000_000]
+TARGET_SIZES = [10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000]
 
 
 def y_column(df: pd.DataFrame) -> str:

@@ -9,16 +9,13 @@ import list.SinglyLinkedListTail;
 import utils.Timer;
 import utils.CSVWriter;
 
-import java.util.Random;
 import java.util.function.Supplier;
 
 public class ListBenchmark {
 
     private static final int WARMUP = BenchmarkRunner.warmupRuns();
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
-    private static final int[] CHEAP_SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000};
-    private static final int[] EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000, 100_000};
-    private static final int[] VERY_EXPENSIVE_SIZES = {10, 100, 1_000, 10_000, 50_000};
+    private static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
     public static void runAll() {
         runForImplementation("singly", SinglyLinkedList::new);
         runForImplementation("singly_tail", SinglyLinkedListTail::new);
@@ -90,77 +87,52 @@ public class ListBenchmark {
 
     private static long measureOperation(Supplier<ListADT<Integer>> factory, String operationName, int n) {
         ListADT<Integer> list = factory.get();
-        Random random = new Random(31L * n + operationName.hashCode());
-        int sampledOps = sampledOps(n);
+
+        // Build the structure up to size n outside the timed block.
+        preloadForReadWriteOps(list, n);
+
+        int targetValue = Math.max(0, n / 2);
 
         switch (operationName) {
             case "push_front":
                 return Timer.measure(() -> {
-                    for (int i = 0; i < n; i++) {
-                        list.pushFront(i);
-                    }
+                    list.pushFront(-1);
                 });
             case "push_back":
                 return Timer.measure(() -> {
-                    for (int i = 0; i < n; i++) {
-                        list.pushBack(i);
-                    }
+                    list.pushBack(-1);
                 });
             case "pop_front":
-                preloadForReadWriteOps(list, n);
                 return Timer.measure(() -> {
-                    for (int i = 0; i < n; i++) {
-                        list.popFront();
-                    }
+                    list.popFront();
                 });
             case "pop_back":
-                preloadForReadWriteOps(list, n);
                 return Timer.measure(() -> {
-                    for (int i = 0; i < n; i++) {
-                        list.popBack();
-                    }
+                    list.popBack();
                 });
             case "find":
-                preloadForReadWriteOps(list, n);
                 return Timer.measure(() -> {
-                    for (int i = 0; i < sampledOps; i++) {
-                        list.find(random.nextInt(n));
-                    }
+                    list.find(targetValue);
                 });
             case "erase":
-                preloadForReadWriteOps(list, n);
+                Position<Integer> eraseTarget = list.find(targetValue);
                 return Timer.measure(() -> {
-                    for (int i = 0; i < sampledOps; i++) {
-                        int value = random.nextInt(n);
-                        Position<Integer> target = list.find(value);
-                        if (target != null) {
-                            list.erase(target);
-                            list.pushFront(value);
-                        }
+                    if (eraseTarget != null) {
+                        list.erase(eraseTarget);
                     }
                 });
             case "add_before":
-                preloadForReadWriteOps(list, n);
+                Position<Integer> addBeforeTarget = list.find(targetValue);
                 return Timer.measure(() -> {
-                    for (int i = 0; i < sampledOps; i++) {
-                        int value = random.nextInt(n);
-                        Position<Integer> target = list.find(value);
-                        if (target != null) {
-                            list.addBefore(target, -1);
-                            list.popFront();
-                        }
+                    if (addBeforeTarget != null) {
+                        list.addBefore(addBeforeTarget, -1);
                     }
                 });
             case "add_after":
-                preloadForReadWriteOps(list, n);
+                Position<Integer> addAfterTarget = list.find(targetValue);
                 return Timer.measure(() -> {
-                    for (int i = 0; i < sampledOps; i++) {
-                        int value = random.nextInt(n);
-                        Position<Integer> target = list.find(value);
-                        if (target != null) {
-                            list.addAfter(target, -1);
-                            list.popFront();
-                        }
+                    if (addAfterTarget != null) {
+                        list.addAfter(addAfterTarget, -1);
                     }
                 });
             default:
@@ -174,43 +146,8 @@ public class ListBenchmark {
         }
     }
 
-    private static int sampledOps(int n) {
-        return Math.max(1, Math.min(5_000, n));
-    }
-
     private static int[] sizesFor(String implementationName, String operationName) {
-        // Very expensive: find, erase, add_before, add_after (O(n) with find)
-        if (
-            "find".equals(operationName) ||
-            "erase".equals(operationName) ||
-            "add_before".equals(operationName) ||
-            "add_after".equals(operationName)
-        ) {
-            return VERY_EXPENSIVE_SIZES;
-        }
-
-        // Expensive: push_back and pop_back for implementations without tail
-        if ("push_back".equals(operationName)) {
-            if ("singly".equals(implementationName) || "doubly".equals(implementationName)) {
-                return EXPENSIVE_SIZES;
-            }
-            // singly_tail and doubly_tail push_back are O(1), use cheap
-            return CHEAP_SIZES;
-        }
-
-        if ("pop_back".equals(operationName)) {
-            if ("singly".equals(implementationName) || "doubly".equals(implementationName)) {
-                return EXPENSIVE_SIZES;
-            }
-            // singly_tail pop_back is O(n), doubly_tail is O(1)
-            if ("singly_tail".equals(implementationName)) {
-                return EXPENSIVE_SIZES;
-            }
-            return CHEAP_SIZES;
-        }
-
-        // Cheap: push_front, pop_front, top operations that are O(1)
-        return CHEAP_SIZES;
+        return SIZES;
     }
 
     private static String csvPathFor(String implementationName, String operationName) {
