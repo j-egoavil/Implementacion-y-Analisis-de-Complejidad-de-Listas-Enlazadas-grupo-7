@@ -56,6 +56,6 @@ public class BenchmarkRunner {
     }
 
     public static int measuredRuns() {
-        return Integer.parseInt(System.getProperty("benchmark.repetitions", "5"));
+        return Integer.parseInt(System.getProperty("benchmark.repetitions", "6"));
     }
 }

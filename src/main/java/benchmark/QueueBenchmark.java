@@ -42,8 +42,9 @@ public class QueueBenchmark {
 
             int[] sizes = sizesFor(operationName);
             for (int n : sizes) {
+                CircularArrayQueue<Integer> queue = createPreloadedQueue(n);
                 BenchmarkStats stats = BenchmarkRunner.run(
-                    () -> measureOperation(operationName, n),
+                    () -> measureOperationInPlace(queue, operationName),
                     WARMUP,
                     REPETITIONS
                 );
@@ -62,21 +63,36 @@ public class QueueBenchmark {
         }
     }
 
-    private static long measureOperation(String operationName, int n) {
+    private static CircularArrayQueue<Integer> createPreloadedQueue(int n) {
         CircularArrayQueue<Integer> queue = new CircularArrayQueue<>();
         for (int i = 0; i < n; i++) {
             queue.enqueue(i);
         }
+        return queue;
+    }
+
+    private static long measureOperationInPlace(CircularArrayQueue<Integer> queue, String operationName) {
 
         switch (operationName) {
-            case "enqueue":
-                return Timer.measure(() -> queue.enqueue(-1));
-            case "dequeue":
-                return Timer.measure(queue::dequeue);
-            case "front":
+            case "enqueue": {
+                long elapsed = Timer.measure(() -> queue.enqueue(-1));
+                queue.delete(-1);
+                return elapsed;
+            }
+            case "dequeue": {
+                final int[] removed = new int[1];
+                long elapsed = Timer.measure(() -> removed[0] = queue.dequeue());
+                queue.enqueue(removed[0]);
+                return elapsed;
+            }
+            case "front": {
                 return Timer.measure(queue::front);
-            case "delete":
-                return Timer.measure(() -> queue.delete(0));
+            }
+            case "delete": {
+                long elapsed = Timer.measure(() -> queue.delete(0));
+                queue.enqueue(0);
+                return elapsed;
+            }
             default:
                 throw new IllegalArgumentException("Unsupported operation: " + operationName);
         }

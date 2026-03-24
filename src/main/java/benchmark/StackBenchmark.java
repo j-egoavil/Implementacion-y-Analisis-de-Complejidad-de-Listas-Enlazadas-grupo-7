@@ -42,8 +42,9 @@ public class StackBenchmark {
 
             int[] sizes = sizesFor(operationName);
             for (int n : sizes) {
+                ArrayStack<Integer> stack = createPreloadedStack(n);
                 BenchmarkStats stats = BenchmarkRunner.run(
-                    () -> measureOperation(operationName, n),
+                    () -> measureOperationInPlace(stack, operationName),
                     WARMUP,
                     REPETITIONS
                 );
@@ -62,21 +63,36 @@ public class StackBenchmark {
         }
     }
 
-    private static long measureOperation(String operationName, int n) {
+    private static ArrayStack<Integer> createPreloadedStack(int n) {
         ArrayStack<Integer> stack = new ArrayStack<>();
         for (int i = 0; i < n; i++) {
             stack.push(i);
         }
+        return stack;
+    }
+
+    private static long measureOperationInPlace(ArrayStack<Integer> stack, String operationName) {
 
         switch (operationName) {
-            case "push":
-                return Timer.measure(() -> stack.push(-1));
-            case "pop":
-                return Timer.measure(stack::pop);
-            case "peek":
+            case "push": {
+                long elapsed = Timer.measure(() -> stack.push(-1));
+                stack.pop();
+                return elapsed;
+            }
+            case "pop": {
+                final int[] removed = new int[1];
+                long elapsed = Timer.measure(() -> removed[0] = stack.pop());
+                stack.push(removed[0]);
+                return elapsed;
+            }
+            case "peek": {
                 return Timer.measure(stack::peek);
-            case "delete":
-                return Timer.measure(() -> stack.delete(0));
+            }
+            case "delete": {
+                long elapsed = Timer.measure(() -> stack.delete(0));
+                stack.push(0);
+                return elapsed;
+            }
             default:
                 throw new IllegalArgumentException("Unsupported operation: " + operationName);
         }

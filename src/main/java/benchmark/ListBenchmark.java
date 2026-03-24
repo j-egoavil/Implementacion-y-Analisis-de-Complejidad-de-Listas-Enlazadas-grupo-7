@@ -65,8 +65,11 @@ public class ListBenchmark {
 
             int[] sizes = sizesFor(implementationName, operationName);
             for (int n : sizes) {
+                ListADT<Integer> list = factory.get();
+                preloadForReadWriteOps(list, n);
+                int targetValue = Math.max(0, n / 2);
                 BenchmarkStats stats = BenchmarkRunner.run(
-                    () -> measureOperation(factory, operationName, n),
+                    () -> measureOperationInPlace(list, operationName, targetValue),
                     WARMUP,
                     REPETITIONS
                 );
@@ -85,56 +88,72 @@ public class ListBenchmark {
         }
     }
 
-    private static long measureOperation(Supplier<ListADT<Integer>> factory, String operationName, int n) {
-        ListADT<Integer> list = factory.get();
-
-        // Build the structure up to size n outside the timed block.
-        preloadForReadWriteOps(list, n);
-
-        int targetValue = Math.max(0, n / 2);
+    private static long measureOperationInPlace(ListADT<Integer> list, String operationName, int targetValue) {
 
         switch (operationName) {
-            case "push_front":
-                return Timer.measure(() -> {
-                    list.pushFront(-1);
-                });
-            case "push_back":
-                return Timer.measure(() -> {
-                    list.pushBack(-1);
-                });
-            case "pop_front":
-                return Timer.measure(() -> {
-                    list.popFront();
-                });
-            case "pop_back":
-                return Timer.measure(() -> {
-                    list.popBack();
-                });
-            case "find":
-                return Timer.measure(() -> {
-                    list.find(targetValue);
-                });
-            case "erase":
+            case "push_front": {
+                long elapsed = Timer.measure(() -> list.pushFront(-1));
+                list.popFront();
+                return elapsed;
+            }
+            case "push_back": {
+                long elapsed = Timer.measure(() -> list.pushBack(-1));
+                list.popBack();
+                return elapsed;
+            }
+            case "pop_front": {
+                final int[] removed = new int[1];
+                long elapsed = Timer.measure(() -> removed[0] = list.popFront());
+                list.pushFront(removed[0]);
+                return elapsed;
+            }
+            case "pop_back": {
+                final int[] removed = new int[1];
+                long elapsed = Timer.measure(() -> removed[0] = list.popBack());
+                list.pushBack(removed[0]);
+                return elapsed;
+            }
+            case "find": {
+                return Timer.measure(() -> list.find(targetValue));
+            }
+            case "erase": {
                 Position<Integer> eraseTarget = list.find(targetValue);
-                return Timer.measure(() -> {
+                long elapsed = Timer.measure(() -> {
                     if (eraseTarget != null) {
                         list.erase(eraseTarget);
                     }
                 });
-            case "add_before":
+                if (eraseTarget != null) {
+                    list.pushBack(targetValue);
+                }
+                return elapsed;
+            }
+            case "add_before": {
                 Position<Integer> addBeforeTarget = list.find(targetValue);
-                return Timer.measure(() -> {
+                long elapsed = Timer.measure(() -> {
                     if (addBeforeTarget != null) {
                         list.addBefore(addBeforeTarget, -1);
                     }
                 });
-            case "add_after":
+                Position<Integer> inserted = list.find(-1);
+                if (inserted != null) {
+                    list.erase(inserted);
+                }
+                return elapsed;
+            }
+            case "add_after": {
                 Position<Integer> addAfterTarget = list.find(targetValue);
-                return Timer.measure(() -> {
+                long elapsed = Timer.measure(() -> {
                     if (addAfterTarget != null) {
                         list.addAfter(addAfterTarget, -1);
                     }
                 });
+                Position<Integer> inserted = list.find(-1);
+                if (inserted != null) {
+                    list.erase(inserted);
+                }
+                return elapsed;
+            }
             default:
                 throw new IllegalArgumentException("Unsupported operation: " + operationName);
         }
