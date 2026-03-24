@@ -19,6 +19,7 @@ public class BenchmarkRunner {
             long value = measuredRun.getAsLong();
             samples[i] = value;
             sum += value;
+
             if (value < min) {
                 min = value;
             }
@@ -27,7 +28,57 @@ public class BenchmarkRunner {
             }
         }
 
+        return buildStats(samples, sum, measuredRuns, min, max);
+    }
+
+    public static BenchmarkStats runBatched(LongSupplier measuredRun,
+                                            int warmupRuns,
+                                            int measuredRuns,
+                                            int batchSize) {
+        if (batchSize <= 0) {
+            throw new IllegalArgumentException("batchSize must be > 0");
+        }
+
+        for (int i = 0; i < warmupRuns; i++) {
+            for (int j = 0; j < batchSize; j++) {
+                measuredRun.getAsLong();
+            }
+        }
+
+        long[] samples = new long[measuredRuns];
+        long sum = 0;
+        long min = Long.MAX_VALUE;
+        long max = Long.MIN_VALUE;
+
+        for (int i = 0; i < measuredRuns; i++) {
+            long total = 0;
+
+            for (int j = 0; j < batchSize; j++) {
+                total += measuredRun.getAsLong();
+            }
+
+            long averagePerOperation = total / batchSize;
+            samples[i] = averagePerOperation;
+            sum += averagePerOperation;
+
+            if (averagePerOperation < min) {
+                min = averagePerOperation;
+            }
+            if (averagePerOperation > max) {
+                max = averagePerOperation;
+            }
+        }
+
+        return buildStats(samples, sum, measuredRuns, min, max);
+    }
+
+    private static BenchmarkStats buildStats(long[] samples,
+                                             long sum,
+                                             int measuredRuns,
+                                             long min,
+                                             long max) {
         Arrays.sort(samples);
+
         long median;
         if (samples.length % 2 == 0) {
             int idx = samples.length / 2;
@@ -42,9 +93,9 @@ public class BenchmarkRunner {
 
     public static int[] sizes(boolean include10Pow8) {
         if (include10Pow8) {
-            return new int[] {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
+            return new int[]{10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
         }
-        return new int[] {10, 100, 1_000, 10_000, 100_000, 1_000_000};
+        return new int[]{10, 100, 1_000, 10_000, 100_000, 1_000_000};
     }
 
     public static boolean include10Pow8() {
@@ -57,5 +108,9 @@ public class BenchmarkRunner {
 
     public static int measuredRuns() {
         return Integer.parseInt(System.getProperty("benchmark.repetitions", "5"));
+    }
+
+    public static int batchSize() {
+        return Integer.parseInt(System.getProperty("benchmark.batchSize", "100"));
     }
 }

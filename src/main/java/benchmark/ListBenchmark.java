@@ -6,8 +6,8 @@ import list.ListADT;
 import list.Position;
 import list.SinglyLinkedList;
 import list.SinglyLinkedListTail;
-import utils.Timer;
 import utils.CSVWriter;
+import utils.Timer;
 
 import java.util.function.Supplier;
 
@@ -15,7 +15,9 @@ public class ListBenchmark {
 
     private static final int WARMUP = BenchmarkRunner.warmupRuns();
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
-    private static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
+    private static final int BATCH_SIZE = BenchmarkRunner.batchSize();
+    private static final int[] SIZES = BenchmarkRunner.sizes(BenchmarkRunner.include10Pow8());
+
     public static void runAll() {
         runForImplementation("singly", SinglyLinkedList::new);
         runForImplementation("singly_tail", SinglyLinkedListTail::new);
@@ -57,7 +59,9 @@ public class ListBenchmark {
         runForImplementation(implementationName, factory, "add_after");
     }
 
-    private static void runForImplementation(String implementationName, Supplier<ListADT<Integer>> factory, String operationName) {
+    private static void runForImplementation(String implementationName,
+                                             Supplier<ListADT<Integer>> factory,
+                                             String operationName) {
         String csvPath = csvPathFor(implementationName, operationName);
 
         try {
@@ -65,17 +69,19 @@ public class ListBenchmark {
 
             int[] sizes = sizesFor(implementationName, operationName);
             for (int n : sizes) {
-                BenchmarkStats stats = BenchmarkRunner.run(
-                    () -> measureOperation(factory, operationName, n),
-                    WARMUP,
-                    REPETITIONS
-                );
+                BenchmarkStats stats;
+
+                if ("find".equals(operationName)) {
+                    stats = benchmarkFind(factory, n);
+                } else {
+                    stats = benchmarkMutatingOperation(factory, operationName, n);
+                }
 
                 writer.writeStats(n, stats);
                 System.out.println(
-                    "List " + implementationName + " " + operationName +
-                    " n=" + n + " avg=" + stats.getAverageNs() +
-                    " median=" + stats.getMedianNs()
+                        "List " + implementationName + " " + operationName +
+                                " n=" + n + " avg=" + stats.getAverageNs() +
+                                " median=" + stats.getMedianNs()
                 );
             }
 
@@ -85,35 +91,58 @@ public class ListBenchmark {
         }
     }
 
-    private static long measureOperation(Supplier<ListADT<Integer>> factory, String operationName, int n) {
-        ListADT<Integer> list = factory.get();
+    /**
+     * find no modifica la estructura.
+     * Reutilizamos una lista base y medimos por lotes para reducir ruido.
+     */
+    private static BenchmarkStats benchmarkFind(Supplier<ListADT<Integer>> factory, int n) {
+        ListADT<Integer> list = buildPreloadedList(factory, n);
+        int targetValue = targetValueFor(n);
 
-        // Build the structure up to size n outside the timed block.
-        preloadForReadWriteOps(list, n);
+        return BenchmarkRunner.runBatched(
+                () -> Timer.measure(() -> list.find(targetValue)),
+                WARMUP,
+                REPETITIONS,
+                BATCH_SIZE
+        );
+    }
 
-        int targetValue = Math.max(0, n / 2);
+    /**
+     * Estas operaciones sí modifican la estructura.
+     * Cada muestra parte de una lista nueva precargada.
+     *
+     * erase, add_before y add_after miden la operación con Position ya obtenida.
+     * El find previo NO entra al cronómetro.
+     */
+    private static BenchmarkStats benchmarkMutatingOperation(Supplier<ListADT<Integer>> factory,
+                                                             String operationName,
+                                                             int n) {
+        return BenchmarkRunner.run(
+                () -> measureMutatingOperation(factory, operationName, n),
+                WARMUP,
+                REPETITIONS
+        );
+    }
+
+    private static long measureMutatingOperation(Supplier<ListADT<Integer>> factory,
+                                                 String operationName,
+                                                 int n) {
+        ListADT<Integer> list = buildPreloadedList(factory, n);
+        int targetValue = targetValueFor(n);
 
         switch (operationName) {
             case "push_front":
-                return Timer.measure(() -> {
-                    list.pushFront(-1);
-                });
+                return Timer.measure(() -> list.pushFront(-1));
+
             case "push_back":
-                return Timer.measure(() -> {
-                    list.pushBack(-1);
-                });
+                return Timer.measure(() -> list.pushBack(-1));
+
             case "pop_front":
-                return Timer.measure(() -> {
-                    list.popFront();
-                });
+                return Timer.measure(list::popFront);
+
             case "pop_back":
-                return Timer.measure(() -> {
-                    list.popBack();
-                });
-            case "find":
-                return Timer.measure(() -> {
-                    list.find(targetValue);
-                });
+                return Timer.measure(list::popBack);
+
             case "erase":
                 Position<Integer> eraseTarget = list.find(targetValue);
                 return Timer.measure(() -> {
@@ -121,6 +150,7 @@ public class ListBenchmark {
                         list.erase(eraseTarget);
                     }
                 });
+
             case "add_before":
                 Position<Integer> addBeforeTarget = list.find(targetValue);
                 return Timer.measure(() -> {
@@ -128,6 +158,7 @@ public class ListBenchmark {
                         list.addBefore(addBeforeTarget, -1);
                     }
                 });
+
             case "add_after":
                 Position<Integer> addAfterTarget = list.find(targetValue);
                 return Timer.measure(() -> {
@@ -135,15 +166,22 @@ public class ListBenchmark {
                         list.addAfter(addAfterTarget, -1);
                     }
                 });
+
             default:
                 throw new IllegalArgumentException("Unsupported operation: " + operationName);
         }
     }
 
-    private static void preloadForReadWriteOps(ListADT<Integer> list, int n) {
+    private static ListADT<Integer> buildPreloadedList(Supplier<ListADT<Integer>> factory, int n) {
+        ListADT<Integer> list = factory.get();
         for (int i = 0; i < n; i++) {
             list.pushFront(i);
         }
+        return list;
+    }
+
+    private static int targetValueFor(int n) {
+        return Math.max(0, n / 2);
     }
 
     private static int[] sizesFor(String implementationName, String operationName) {
