@@ -71,7 +71,7 @@ public class CircularArrayQueue<T> implements MyQueue<T> {
         data = newData;
         front = 0;
         rear = size;
-    } 
+    }
 
     @Override
     public void delete(T n) {
