@@ -60,17 +60,18 @@ public class CircularArrayQueue<T> implements MyQueue<T> {
     }
 
     private void resize() {
+        int oldCapacity = capacity;
         capacity *= 2;
         T[] newData = (T[]) new Object[capacity];
 
         for (int i = 0; i < size; i++) {
-            newData[i] = data[(front + i) % capacity];
+            newData[i] = data[(front + i) % oldCapacity];
         }
 
         data = newData;
         front = 0;
         rear = size;
-    }
+    } 
 
     @Override
     public void delete(T n) {
