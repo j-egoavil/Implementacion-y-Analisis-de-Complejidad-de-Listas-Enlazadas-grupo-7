@@ -10,6 +10,8 @@ public class StackBenchmark {
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
     private static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
 
+    private static volatile Object sink;
+
     public static void runAll() {
         runOperation("push");
         runOperation("pop");
@@ -43,16 +45,16 @@ public class StackBenchmark {
             int[] sizes = sizesFor(operationName);
             for (int n : sizes) {
                 BenchmarkStats stats = BenchmarkRunner.run(
-                    () -> measureOperation(operationName, n),
-                    WARMUP,
-                    REPETITIONS
+                        () -> measureOperation(operationName, n),
+                        WARMUP,
+                        REPETITIONS
                 );
 
                 writer.writeStats(n, stats);
                 System.out.println(
-                    "Stack " + operationName +
-                    " n=" + n + " avg=" + stats.getAverageNs() +
-                    " median=" + stats.getMedianNs()
+                        "Stack " + operationName +
+                                " n=" + n + " avg=" + stats.getAverageNs() +
+                                " median=" + stats.getMedianNs()
                 );
             }
 
@@ -71,12 +73,16 @@ public class StackBenchmark {
         switch (operationName) {
             case "push":
                 return Timer.measure(() -> stack.push(-1));
+
             case "pop":
-                return Timer.measure(stack::pop);
+                return Timer.measure(() -> sink = stack.pop());
+
             case "peek":
-                return Timer.measure(stack::peek);
+                return Timer.measure(() -> sink = stack.peek());
+
             case "delete":
                 return Timer.measure(() -> stack.delete(0));
+
             default:
                 throw new IllegalArgumentException("Unsupported operation: " + operationName);
         }
