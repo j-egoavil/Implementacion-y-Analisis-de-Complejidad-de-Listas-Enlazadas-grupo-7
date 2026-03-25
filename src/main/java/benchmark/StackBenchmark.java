@@ -51,9 +51,11 @@ public class StackBenchmark {
                 );
 
                 writer.writeStats(n, stats);
+
                 System.out.println(
                         "Stack " + operationName +
-                                " n=" + n + " avg=" + stats.getAverageNs() +
+                                " n=" + n +
+                                " avg=" + stats.getAverageNs() +
                                 " median=" + stats.getMedianNs()
                 );
             }

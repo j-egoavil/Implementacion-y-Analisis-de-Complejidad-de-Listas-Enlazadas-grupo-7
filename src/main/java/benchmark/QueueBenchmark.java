@@ -10,6 +10,8 @@ public class QueueBenchmark {
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
     private static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
 
+    private static volatile Object sink;
+
     public static void runAll() {
         runOperation("enqueue");
         runOperation("dequeue");
@@ -43,16 +45,18 @@ public class QueueBenchmark {
             int[] sizes = sizesFor(operationName);
             for (int n : sizes) {
                 BenchmarkStats stats = BenchmarkRunner.run(
-                    () -> measureOperation(operationName, n),
-                    WARMUP,
-                    REPETITIONS
+                        () -> measureOperation(operationName, n),
+                        WARMUP,
+                        REPETITIONS
                 );
 
                 writer.writeStats(n, stats);
+
                 System.out.println(
-                    "Queue " + operationName +
-                    " n=" + n + " avg=" + stats.getAverageNs() +
-                    " median=" + stats.getMedianNs()
+                        "Queue " + operationName +
+                                " n=" + n +
+                                " avg=" + stats.getAverageNs() +
+                                " median=" + stats.getMedianNs()
                 );
             }
 
@@ -71,12 +75,16 @@ public class QueueBenchmark {
         switch (operationName) {
             case "enqueue":
                 return Timer.measure(() -> queue.enqueue(-1));
+
             case "dequeue":
-                return Timer.measure(queue::dequeue);
+                return Timer.measure(() -> sink = queue.dequeue());
+
             case "front":
-                return Timer.measure(queue::front);
+                return Timer.measure(() -> sink = queue.front());
+
             case "delete":
                 return Timer.measure(() -> queue.delete(0));
+
             default:
                 throw new IllegalArgumentException("Unsupported operation: " + operationName);
         }
