@@ -16,6 +16,9 @@ public class ListBenchmark {
     private static final int WARMUP = BenchmarkRunner.warmupRuns();
     private static final int REPETITIONS = BenchmarkRunner.measuredRuns();
     private static final int[] SIZES = {10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000};
+
+    private static volatile Object sink;
+
     public static void runAll() {
         runForImplementation("singly", SinglyLinkedList::new);
         runForImplementation("singly_tail", SinglyLinkedListTail::new);
@@ -57,7 +60,9 @@ public class ListBenchmark {
         runForImplementation(implementationName, factory, "add_after");
     }
 
-    private static void runForImplementation(String implementationName, Supplier<ListADT<Integer>> factory, String operationName) {
+    private static void runForImplementation(String implementationName,
+                                             Supplier<ListADT<Integer>> factory,
+                                             String operationName) {
         String csvPath = csvPathFor(implementationName, operationName);
 
         try {
@@ -66,16 +71,16 @@ public class ListBenchmark {
             int[] sizes = sizesFor(implementationName, operationName);
             for (int n : sizes) {
                 BenchmarkStats stats = BenchmarkRunner.run(
-                    () -> measureOperation(factory, operationName, n),
-                    WARMUP,
-                    REPETITIONS
+                        () -> measureOperation(factory, operationName, n),
+                        WARMUP,
+                        REPETITIONS
                 );
 
                 writer.writeStats(n, stats);
                 System.out.println(
-                    "List " + implementationName + " " + operationName +
-                    " n=" + n + " avg=" + stats.getAverageNs() +
-                    " median=" + stats.getMedianNs()
+                        "List " + implementationName + " " + operationName +
+                                " n=" + n + " avg=" + stats.getAverageNs() +
+                                " median=" + stats.getMedianNs()
                 );
             }
 
@@ -88,32 +93,26 @@ public class ListBenchmark {
     private static long measureOperation(Supplier<ListADT<Integer>> factory, String operationName, int n) {
         ListADT<Integer> list = factory.get();
 
-        // Build the structure up to size n outside the timed block.
         preloadForReadWriteOps(list, n);
 
         int targetValue = Math.max(0, n / 2);
 
         switch (operationName) {
             case "push_front":
-                return Timer.measure(() -> {
-                    list.pushFront(-1);
-                });
+                return Timer.measure(() -> list.pushFront(-1));
+
             case "push_back":
-                return Timer.measure(() -> {
-                    list.pushBack(-1);
-                });
+                return Timer.measure(() -> list.pushBack(-1));
+
             case "pop_front":
-                return Timer.measure(() -> {
-                    list.popFront();
-                });
+                return Timer.measure(() -> sink = list.popFront());
+
             case "pop_back":
-                return Timer.measure(() -> {
-                    list.popBack();
-                });
+                return Timer.measure(() -> sink = list.popBack());
+
             case "find":
-                return Timer.measure(() -> {
-                    list.find(targetValue);
-                });
+                return Timer.measure(() -> sink = list.find(targetValue));
+
             case "erase":
                 Position<Integer> eraseTarget = list.find(targetValue);
                 return Timer.measure(() -> {
@@ -121,6 +120,7 @@ public class ListBenchmark {
                         list.erase(eraseTarget);
                     }
                 });
+
             case "add_before":
                 Position<Integer> addBeforeTarget = list.find(targetValue);
                 return Timer.measure(() -> {
@@ -128,6 +128,7 @@ public class ListBenchmark {
                         list.addBefore(addBeforeTarget, -1);
                     }
                 });
+
             case "add_after":
                 Position<Integer> addAfterTarget = list.find(targetValue);
                 return Timer.measure(() -> {
@@ -135,6 +136,7 @@ public class ListBenchmark {
                         list.addAfter(addAfterTarget, -1);
                     }
                 });
+
             default:
                 throw new IllegalArgumentException("Unsupported operation: " + operationName);
         }
