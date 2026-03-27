@@ -1,34 +1,25 @@
-from __future__ import annotations
-
 from pathlib import Path
-from typing import Iterable
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from pandas.errors import EmptyDataError
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-ROOT_DIR = SCRIPT_DIR.parent
-DATA_DIR = ROOT_DIR / "data"
-OUTPUT_DIR = ROOT_DIR / "docs" / "graficas" / "avanzadas"
+DATA_DIR = SCRIPT_DIR.parent / "data"
+OUTPUT_DIR = SCRIPT_DIR.parent / "docs" / "graficas" / "comparaciones_avanzadas"
 
-SLOPE_DIR = OUTPUT_DIR / "pendiente-loglog"
-SLOPE_STACK_DIR = SLOPE_DIR / "stack"
-SLOPE_QUEUE_DIR = SLOPE_DIR / "queue"
-SLOPE_LIST_SINGLY_DIR = SLOPE_DIR / "list" / "singly"
-SLOPE_LIST_DOUBLY_DIR = SLOPE_DIR / "list" / "doubly"
-SPEEDUP_DIR = OUTPUT_DIR / "speedup-tail"
 COLOR_LINES_DIR = OUTPUT_DIR / "lineas-por-operacion"
 COLOR_LINES_STACK_DIR = COLOR_LINES_DIR / "stack"
 COLOR_LINES_QUEUE_DIR = COLOR_LINES_DIR / "queue"
 COLOR_LINES_LIST_DIR = COLOR_LINES_DIR / "list"
-HEATMAP_DIR = OUTPUT_DIR / "heatmap"
-HEATMAP_STACK_DIR = HEATMAP_DIR / "stack"
-HEATMAP_QUEUE_DIR = HEATMAP_DIR / "queue"
-HEATMAP_LIST_DIR = HEATMAP_DIR / "list"
-HEATMAP_GLOBAL_DIR = HEATMAP_DIR / "global"
+
+HEATMAP_DIR = OUTPUT_DIR / "heatmaps"
+SLOPE_DIR = OUTPUT_DIR / "slopes-loglog"
+SPEEDUP_DIR = OUTPUT_DIR / "speedups"
+
+TARGET_SIZES = [10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000]
 
 LIST_OPS = [
     "push_front",
@@ -41,15 +32,11 @@ LIST_OPS = [
     "add_after",
 ]
 
-TARGET_SIZES = [10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000]
-
-
-def y_column(df: pd.DataFrame) -> str:
-    if "median_ns" in df.columns:
-        return "median_ns"
-    if "avg_time_ns" in df.columns:
-        return "avg_time_ns"
-    return "time"
+KEY_SPEEDUP_OPS = [
+    "push_back",
+    "pop_back",
+    "find",
+]
 
 
 def read_csv(path: Path) -> pd.DataFrame | None:
@@ -59,126 +46,113 @@ def read_csv(path: Path) -> pd.DataFrame | None:
         df = pd.read_csv(path)
     except EmptyDataError:
         return None
+
     if "size" not in df.columns:
         return None
-    y_col = y_column(df)
-    if y_col not in df.columns:
+
+    if "median_ns" in df.columns:
+        df = df.rename(columns={"median_ns": "time_ns"})
+    elif "avg_time_ns" in df.columns:
+        df = df.rename(columns={"avg_time_ns": "time_ns"})
+    elif "time" in df.columns:
+        df = df.rename(columns={"time": "time_ns"})
+    else:
         return None
-    out = df[["size", y_col]].copy()
-    out = out.rename(columns={y_col: "time_ns"})
-    out = out.dropna()
-    if out.empty:
-        return None
-    return out
+
+    return df[["size", "time_ns"]].dropna().sort_values("size")
+
+
+def pretty_impl_name(name: str) -> str:
+    mapping = {
+        "singly_no_tail": "Singly sin tail",
+        "singly_tail": "Singly con tail",
+        "doubly_no_tail": "Doubly sin tail",
+        "doubly_tail": "Doubly con tail",
+    }
+    return mapping.get(name, name)
+
+
+def pretty_op_name(op: str) -> str:
+    mapping = {
+        "push_front": "push_front",
+        "push_back": "push_back",
+        "pop_front": "pop_front",
+        "pop_back": "pop_back",
+        "find": "find",
+        "erase": "erase",
+        "add_before": "add_before",
+        "add_after": "add_after",
+        "push": "push",
+        "pop": "pop",
+        "peek": "peek",
+        "enqueue": "enqueue",
+        "dequeue": "dequeue",
+        "front": "front",
+        "delete": "delete",
+    }
+    return mapping.get(op, op)
 
 
 def pick_time_unit(max_ns: float) -> tuple[str, float]:
+    if max_ns >= 1_000_000_000:
+        return "s", 1_000_000_000
     if max_ns >= 1_000_000:
-        return "ms", 1_000_000.0
+        return "ms", 1_000_000
     if max_ns >= 1_000:
-        return "us", 1_000.0
+        return "µs", 1_000
     return "ns", 1.0
 
 
 def estimate_missing_sizes(df: pd.DataFrame, target_sizes: list[int]) -> tuple[pd.DataFrame, set[int]]:
-    out = df.copy()
-    existing = set(int(x) for x in out["size"].tolist())
-    estimated: set[int] = set()
+    if df is None or df.empty:
+        return df, set()
 
-    if len(out) < 2:
-        return out.sort_values("size"), estimated
+    existing_sizes = set(int(x) for x in df["size"].tolist())
+    missing = [s for s in target_sizes if s not in existing_sizes]
+    if not missing:
+        return df, set()
 
-    x_log = np.log10(out["size"].astype(float).to_numpy())
-    y_log = np.log10(out["time_ns"].astype(float).to_numpy())
-    alpha, intercept = np.polyfit(x_log, y_log, 1)
+    if len(df) < 2:
+        return df, set()
 
-    rows = []
-    for n in target_sizes:
-        if n in existing:
-            continue
-        pred = (float(n) ** float(alpha)) * (10 ** float(intercept))
-        pred = max(pred, 1.0)
-        rows.append({"size": n, "time_ns": pred})
-        estimated.add(n)
+    x = np.log10(df["size"].astype(float).values)
+    y = np.log10(df["time_ns"].astype(float).values)
 
-    if rows:
-        out = pd.concat([out, pd.DataFrame(rows)], ignore_index=True)
+    slope, intercept = np.polyfit(x, y, 1)
 
-    return out.sort_values("size"), estimated
+    estimated_rows = []
+    for s in missing:
+        pred_log_y = slope * np.log10(float(s)) + intercept
+        pred_y = float(10 ** pred_log_y)
+        estimated_rows.append({"size": s, "time_ns": pred_y})
 
-
-def clear_pngs(folders: Iterable[Path]) -> None:
-    for folder in folders:
-        folder.mkdir(parents=True, exist_ok=True)
-        for png in folder.rglob("*.png"):
-            png.unlink()
-
-
-def slope_output_path(label: str) -> Path:
-    file_name = f"slope_{label}.png"
-    if label.startswith("stack_"):
-        return SLOPE_STACK_DIR / file_name
-    if label.startswith("queue_"):
-        return SLOPE_QUEUE_DIR / file_name
-    if label.startswith("singly"):
-        return SLOPE_LIST_SINGLY_DIR / file_name
-    if label.startswith("doubly"):
-        return SLOPE_LIST_DOUBLY_DIR / file_name
-    return SLOPE_DIR / file_name
-
-
-def stack_paths() -> dict[str, Path]:
-    base = DATA_DIR / "data-stack"
-    return {
-        "push": base / "stack_push.csv",
-        "pop": base / "stack_pop.csv",
-        "peek": base / "stack_peek.csv",
-        "delete": base / "stack_delete.csv",
-    }
-
-
-def queue_paths() -> dict[str, Path]:
-    base = DATA_DIR / "data-queue"
-    return {
-        "enqueue": base / "queue_enqueue.csv",
-        "dequeue": base / "queue_dequeue.csv",
-        "front": base / "queue_front.csv",
-        "delete": base / "queue_delete.csv",
-    }
-
-
-def list_impl_paths() -> dict[str, Path]:
-    base = DATA_DIR / "data-list"
-    out: dict[str, Path] = {}
-    for op in LIST_OPS:
-        out[f"singly_no_tail_{op}"] = base / "list-singly" / "no-tail" / f"list_singly_{op}.csv"
-        out[f"singly_tail_{op}"] = base / "list-singly" / "whit-tail" / f"list_singly_tail_{op}.csv"
-        out[f"doubly_no_tail_{op}"] = base / "list-doubly" / "no-tail" / f"list_doubly_{op}.csv"
-        out[f"doubly_tail_{op}"] = base / "list-doubly" / "whit-tail" / f"list_doubly_tail_{op}.csv"
-    return out
+    estimated_df = pd.DataFrame(estimated_rows)
+    out = pd.concat([df, estimated_df], ignore_index=True).sort_values("size")
+    return out, set(missing)
 
 
 def plot_lines_by_operation(
-    title: str,
-    op_to_path: dict[str, Path],
-    output_path: Path,
-    align_common_sizes: bool = False,
-    fill_target_sizes: list[int] | None = None,
+        title: str,
+        op_to_path: dict[str, Path],
+        output_path: Path,
+        align_common_sizes: bool = False,
+        fill_target_sizes: list[int] | None = None,
+        show_estimated_note: bool = False,
 ) -> None:
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(10, 5.6))
     plotted = 0
     loaded: dict[str, pd.DataFrame] = {}
-
     estimated_sizes_by_op: dict[str, set[int]] = {}
 
     for op, path in op_to_path.items():
         df = read_csv(path)
         if df is None:
             continue
-        df = df.sort_values("size")
+
         if fill_target_sizes is not None:
             df, estimated = estimate_missing_sizes(df, fill_target_sizes)
             estimated_sizes_by_op[op] = estimated
+
         loaded[op] = df
 
     if not loaded:
@@ -191,6 +165,7 @@ def plot_lines_by_operation(
         for df in loaded.values():
             sizes = set(int(x) for x in df["size"].tolist())
             common_sizes = sizes if common_sizes is None else common_sizes.intersection(sizes)
+
         if not common_sizes:
             plt.close()
             print(f"Skip: {output_path.name} (no common sizes)")
@@ -206,7 +181,14 @@ def plot_lines_by_operation(
             if plot_df.empty:
                 continue
 
-        line, = plt.plot(plot_df["size"], plot_df["time_ns"] / divisor, marker="o", label=op)
+        line, = plt.plot(
+            plot_df["size"],
+            plot_df["time_ns"] / divisor,
+            marker="o",
+            linewidth=1.8,
+            markersize=4.5,
+            label=pretty_op_name(op),
+            )
 
         estimated_sizes = estimated_sizes_by_op.get(op, set())
         if estimated_sizes:
@@ -217,8 +199,9 @@ def plot_lines_by_operation(
                     est_df["time_ns"] / divisor,
                     marker="x",
                     color=line.get_color(),
-                    s=65,
-                )
+                    s=55,
+                    )
+
         plotted += 1
 
     if plotted == 0:
@@ -226,259 +209,272 @@ def plot_lines_by_operation(
         print(f"Skip: {output_path.name} (no data)")
         return
 
-    plt.xlabel("Input size")
-    plt.ylabel(f"Time ({unit})")
+    plt.xlabel("Tamaño de entrada (n)")
+    plt.ylabel(f"Tiempo ({unit})")
     plt.title(title)
     plt.xscale("log")
     plt.yscale("log")
-    plt.grid(alpha=0.25)
-    plt.legend(ncol=2)
-    if fill_target_sizes is not None:
-        plt.figtext(0.99, 0.01, "x = estimated missing size", ha="right", fontsize=8)
+    plt.grid(alpha=0.18, which="both")
+    plt.legend(ncol=2, fontsize=8)
+
     plt.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=170)
+    plt.savefig(output_path, dpi=180, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}")
 
 
-def slope_from_df(df: pd.DataFrame) -> tuple[float, float]:
-    x = np.log10(df["size"].astype(float).to_numpy())
-    y = np.log10(df["time_ns"].astype(float).to_numpy())
-    alpha, intercept = np.polyfit(x, y, 1)
-    return float(alpha), float(intercept)
+def plot_heatmap(title: str, op_to_path: dict[str, Path], output_path: Path) -> None:
+    frames = []
+    for op, path in op_to_path.items():
+        df = read_csv(path)
+        if df is None:
+            continue
+        temp = df.copy()
+        temp["operation"] = pretty_op_name(op)
+        frames.append(temp)
+
+    if not frames:
+        print(f"Skip: {output_path.name} (no data)")
+        return
+
+    full = pd.concat(frames, ignore_index=True)
+    pivot = full.pivot(index="operation", columns="size", values="time_ns")
+    if pivot.empty:
+        print(f"Skip: {output_path.name} (empty pivot)")
+        return
+
+    z = np.log10(pivot.astype(float))
+
+    fig, ax = plt.subplots(figsize=(10, 4.8))
+    im = ax.imshow(z.values, aspect="auto", interpolation="nearest")
+
+    ax.set_xticks(range(len(z.columns)))
+    ax.set_xticklabels([str(c) for c in z.columns], rotation=45, ha="right")
+    ax.set_yticks(range(len(z.index)))
+    ax.set_yticklabels(list(z.index))
+    ax.set_xlabel("Tamaño de entrada (n)")
+    ax.set_ylabel("Operación")
+    ax.set_title(title)
+
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label("log10(tiempo en ns)")
+
+    plt.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=180, bbox_inches="tight")
+    plt.close()
+    print(f"Saved: {output_path}")
 
 
 def plot_loglog_with_slope(label: str, csv_path: Path, output_path: Path) -> None:
     df = read_csv(csv_path)
     if df is None or len(df) < 2:
-        print(f"Skip: {output_path.name} (not enough data)")
+        print(f"Skip: {output_path.name} (insufficient data)")
         return
 
-    alpha, intercept = slope_from_df(df)
-    x = df["size"].astype(float).to_numpy()
-    y_fit = (x ** alpha) * (10 ** intercept)
-    unit, divisor = pick_time_unit(float(df["time_ns"].max()))
+    x = np.log10(df["size"].astype(float).values)
+    y = np.log10(df["time_ns"].astype(float).values)
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(df["size"], df["time_ns"] / divisor, marker="o", label="Measured")
-    plt.plot(df["size"], y_fit / divisor, linestyle="--", label=f"Fit alpha={alpha:.2f}")
-    plt.xlabel("Input size")
-    plt.ylabel(f"Time ({unit})")
-    plt.title(f"Log-log slope: {label}")
-    plt.xscale("log")
-    plt.yscale("log")
-    plt.grid(alpha=0.25)
-    plt.legend()
+    slope, intercept = np.polyfit(x, y, 1)
+    fit_y = slope * x + intercept
+
+    plt.figure(figsize=(7.2, 5))
+    plt.plot(x, y, marker="o", label="Datos")
+    plt.plot(x, fit_y, linestyle="--", label=f"Ajuste lineal (α≈{slope:.2f})")
+    plt.xlabel("log10(n)")
+    plt.ylabel("log10(tiempo en ns)")
+    plt.title(f"Pendiente log-log: {label}")
+    plt.grid(alpha=0.18, which="both")
+    plt.legend(fontsize=9)
     plt.tight_layout()
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=170)
+    plt.savefig(output_path, dpi=180, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}")
 
 
-def plot_speedup_tail_vs_no_tail(
-    family: str,
-    op: str,
-    no_tail_csv: Path,
-    tail_csv: Path,
-    output_path: Path,
+def plot_speedup(
+        title: str,
+        faster_path: Path,
+        slower_path: Path,
+        output_path: Path,
+        faster_label: str,
+        slower_label: str,
 ) -> None:
-    a = read_csv(no_tail_csv)
-    b = read_csv(tail_csv)
-    if a is None or b is None:
+    fast_df = read_csv(faster_path)
+    slow_df = read_csv(slower_path)
+
+    if fast_df is None or slow_df is None:
         print(f"Skip: {output_path.name} (missing data)")
         return
 
-    merged = a.merge(b, on="size", suffixes=("_no_tail", "_tail"))
+    merged = pd.merge(
+        fast_df.rename(columns={"time_ns": "fast_ns"}),
+        slow_df.rename(columns={"time_ns": "slow_ns"}),
+        on="size",
+        how="inner",
+    )
+
     if merged.empty:
-        print(f"Skip: {output_path.name} (no common sizes)")
+        print(f"Skip: {output_path.name} (no shared sizes)")
         return
 
-    merged["speedup"] = merged["time_ns_no_tail"] / merged["time_ns_tail"]
+    merged["speedup"] = merged["slow_ns"] / merged["fast_ns"]
 
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(8.2, 5))
     plt.plot(merged["size"], merged["speedup"], marker="o")
-    plt.axhline(1.0, color="gray", linestyle="--", linewidth=1)
-    plt.xlabel("Input size")
-    plt.ylabel("Speedup (no-tail / tail)")
-    plt.title(f"Speedup {family}: {op}")
+    plt.axhline(1.0, linestyle="--", linewidth=1)
     plt.xscale("log")
-    plt.grid(alpha=0.25)
-    plt.tight_layout()
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=170)
-    plt.close()
-    print(f"Saved: {output_path}")
-
-
-def plot_heatmap_operations_vs_size(title: str, op_to_path: dict[str, Path], output_path: Path) -> None:
-    rows: list[pd.Series] = []
-    labels: list[str] = []
-    sizes_reference: list[int] | None = None
-
-    for op, path in op_to_path.items():
-        df = read_csv(path)
-        if df is None:
-            continue
-        df = df.sort_values("size")
-        sizes = df["size"].astype(int).tolist()
-        if sizes_reference is None:
-            sizes_reference = sizes
-        if sizes_reference != sizes:
-            continue
-        rows.append(np.log10(df["time_ns"].to_numpy(dtype=float) + 1.0))
-        labels.append(op)
-
-    if not rows or sizes_reference is None:
-        print(f"Skip: {output_path.name} (no aligned data)")
-        return
-
-    matrix = np.vstack(rows)
-
-    plt.figure(figsize=(11, 4))
-    im = plt.imshow(matrix, aspect="auto", cmap="viridis")
-    plt.colorbar(im, label="log10(time_ns + 1)")
-    plt.yticks(ticks=np.arange(len(labels)), labels=labels)
-    plt.xticks(ticks=np.arange(len(sizes_reference)), labels=[str(s) for s in sizes_reference], rotation=45)
-    plt.xlabel("Input size")
-    plt.ylabel("Operation")
+    plt.yscale("log")
+    plt.xlabel("Tamaño de entrada (n)")
+    plt.ylabel(f"Speedup ({slower_label} / {faster_label})")
     plt.title(title)
+    plt.grid(alpha=0.18, which="both")
     plt.tight_layout()
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=170)
+    plt.savefig(output_path, dpi=180, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}")
 
 
-def plot_list_global_heatmap_max_n(output_path: Path) -> None:
-    impls = [
-        "singly_no_tail",
-        "singly_tail",
-        "doubly_no_tail",
-        "doubly_tail",
-    ]
+def path_list_impl(impl: str, op: str) -> Path:
+    base = DATA_DIR / "data-list"
+    mapping = {
+        "singly_no_tail": base / "list-singly" / "no-tail" / f"list_singly_{op}.csv",
+        "singly_tail": base / "list-singly" / "whit-tail" / f"list_singly_tail_{op}.csv",
+        "doubly_no_tail": base / "list-doubly" / "no-tail" / f"list_doubly_{op}.csv",
+        "doubly_tail": base / "list-doubly" / "whit-tail" / f"list_doubly_tail_{op}.csv",
+    }
+    return mapping[impl]
 
-    table: list[list[float]] = []
-    labels: list[str] = []
 
-    for impl in impls:
-        row: list[float] = []
-        valid = True
-        for op in LIST_OPS:
-            path = list_impl_paths()[f"{impl}_{op}"]
-            df = read_csv(path)
-            if df is None:
-                valid = False
-                break
-            max_idx = df["size"].idxmax()
-            row.append(float(df.loc[max_idx, "time_ns"]))
-        if valid:
-            table.append(row)
-            labels.append(impl)
+def path_stack(op: str) -> Path:
+    return DATA_DIR / "data-stack" / f"stack_{op}.csv"
 
-    if not table:
-        print(f"Skip: {output_path.name} (no data)")
+
+def path_queue(op: str) -> Path:
+    return DATA_DIR / "data-queue" / f"queue_{op}.csv"
+
+
+def clear_existing_pngs() -> None:
+    if not OUTPUT_DIR.exists():
         return
-
-    matrix = np.log10(np.array(table, dtype=float) + 1.0)
-
-    plt.figure(figsize=(12, 4.8))
-    im = plt.imshow(matrix, aspect="auto", cmap="magma")
-    plt.colorbar(im, label="log10(time_ns + 1)")
-    plt.yticks(ticks=np.arange(len(labels)), labels=labels)
-    plt.xticks(ticks=np.arange(len(LIST_OPS)), labels=LIST_OPS, rotation=35, ha="right")
-    plt.xlabel("Operation")
-    plt.ylabel("Implementation")
-    plt.title("List global heatmap at max n")
-    plt.tight_layout()
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=170)
-    plt.close()
-    print(f"Saved: {output_path}")
+    for png in OUTPUT_DIR.rglob("*.png"):
+        png.unlink()
 
 
 def main() -> None:
-    clear_pngs([SLOPE_DIR, SPEEDUP_DIR, COLOR_LINES_DIR, HEATMAP_DIR])
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    clear_existing_pngs()
 
-    stack = stack_paths()
-    queue = queue_paths()
+    # -------- Gráficas principales: líneas por operación --------
 
-    # User idea: y=time, x=size, color=operation.
+    stack = {
+        "push": path_stack("push"),
+        "pop": path_stack("pop"),
+        "peek": path_stack("peek"),
+        "delete": path_stack("delete"),
+    }
+    queue = {
+        "enqueue": path_queue("enqueue"),
+        "dequeue": path_queue("dequeue"),
+        "front": path_queue("front"),
+        "delete": path_queue("delete"),
+    }
+
+    list_impls = {
+        "singly_no_tail": {op: path_list_impl("singly_no_tail", op) for op in LIST_OPS},
+        "singly_tail": {op: path_list_impl("singly_tail", op) for op in LIST_OPS},
+        "doubly_no_tail": {op: path_list_impl("doubly_no_tail", op) for op in LIST_OPS},
+        "doubly_tail": {op: path_list_impl("doubly_tail", op) for op in LIST_OPS},
+    }
+
     plot_lines_by_operation(
-        title="Stack methods by operation",
+        title="Métodos de stack por operación",
         op_to_path=stack,
         output_path=COLOR_LINES_STACK_DIR / "stack_methods_color_by_operation.png",
         align_common_sizes=True,
-        fill_target_sizes=TARGET_SIZES,
+        fill_target_sizes=None,
     )
+
     plot_lines_by_operation(
-        title="Queue methods by operation",
+        title="Métodos de queue por operación",
         op_to_path=queue,
         output_path=COLOR_LINES_QUEUE_DIR / "queue_methods_color_by_operation.png",
         align_common_sizes=True,
-        fill_target_sizes=TARGET_SIZES,
+        fill_target_sizes=None,
     )
 
-    for impl in ["singly_no_tail", "singly_tail", "doubly_no_tail", "doubly_tail"]:
-        op_paths = {op: list_impl_paths()[f"{impl}_{op}"] for op in LIST_OPS}
+    for impl, op_paths in list_impls.items():
         plot_lines_by_operation(
-            title=f"List methods by operation: {impl}",
+            title=f"Métodos de lista: {pretty_impl_name(impl)}",
             op_to_path=op_paths,
             output_path=COLOR_LINES_LIST_DIR / f"list_methods_color_by_operation_{impl}.png",
             align_common_sizes=True,
-            fill_target_sizes=TARGET_SIZES,
+            fill_target_sizes=None,
         )
 
-    # Heatmaps.
-    plot_heatmap_operations_vs_size(
-        title="Heatmap stack: operation vs size",
-        op_to_path=stack,
-        output_path=HEATMAP_STACK_DIR / "heatmap_stack_operation_vs_size.png",
-    )
-    plot_heatmap_operations_vs_size(
-        title="Heatmap queue: operation vs size",
-        op_to_path=queue,
-        output_path=HEATMAP_QUEUE_DIR / "heatmap_queue_operation_vs_size.png",
-    )
-    for impl in ["singly_no_tail", "singly_tail", "doubly_no_tail", "doubly_tail"]:
-        op_paths = {op: list_impl_paths()[f"{impl}_{op}"] for op in LIST_OPS}
-        plot_heatmap_operations_vs_size(
-            title=f"Heatmap list ({impl}): operation vs size",
-            op_to_path=op_paths,
-            output_path=HEATMAP_LIST_DIR / f"heatmap_list_{impl}_operation_vs_size.png",
-        )
-    plot_list_global_heatmap_max_n(HEATMAP_GLOBAL_DIR / "heatmap_list_global_max_n.png")
+    # -------- Heatmaps (apoyo / anexo) --------
 
-    # Log-log slopes for all methods.
-    all_series: dict[str, Path] = {}
-    all_series.update({f"stack_{k}": v for k, v in stack.items()})
-    all_series.update({f"queue_{k}": v for k, v in queue.items()})
-    all_series.update(list_impl_paths())
+    plot_heatmap("Mapa de calor: stack", stack, HEATMAP_DIR / "heatmap_stack.png")
+    plot_heatmap("Mapa de calor: queue", queue, HEATMAP_DIR / "heatmap_queue.png")
 
-    for label, csv_path in all_series.items():
+    for impl, op_paths in list_impls.items():
+        plot_heatmap(
+            f"Mapa de calor: {pretty_impl_name(impl)}",
+            op_paths,
+            HEATMAP_DIR / f"heatmap_{impl}.png",
+            )
+
+    # -------- Pendientes log-log --------
+
+    for op, path in stack.items():
         plot_loglog_with_slope(
-            label=label,
-            csv_path=csv_path,
-            output_path=slope_output_path(label),
+            f"Stack {pretty_op_name(op)}",
+            path,
+            SLOPE_DIR / "stack" / f"slope_stack_{op}.png",
+            )
+
+    for op, path in queue.items():
+        plot_loglog_with_slope(
+            f"Queue {pretty_op_name(op)}",
+            path,
+            SLOPE_DIR / "queue" / f"slope_queue_{op}.png",
+            )
+
+    for impl, op_paths in list_impls.items():
+        for op, path in op_paths.items():
+            plot_loglog_with_slope(
+                f"{pretty_impl_name(impl)} - {pretty_op_name(op)}",
+                path,
+                SLOPE_DIR / "list" / impl / f"slope_{impl}_{op}.png",
+                )
+
+    # -------- Speedups clave --------
+
+    for op in KEY_SPEEDUP_OPS:
+        plot_speedup(
+            title=f"Speedup Singly con tail vs sin tail: {pretty_op_name(op)}",
+            faster_path=path_list_impl("singly_tail", op),
+            slower_path=path_list_impl("singly_no_tail", op),
+            output_path=SPEEDUP_DIR / "singly" / f"speedup_singly_{op}.png",
+            faster_label="con tail",
+            slower_label="sin tail",
         )
 
-    # Speedup tail vs no-tail for list families.
-    for op in LIST_OPS:
-        plot_speedup_tail_vs_no_tail(
-            family="singly",
-            op=op,
-            no_tail_csv=list_impl_paths()[f"singly_no_tail_{op}"],
-            tail_csv=list_impl_paths()[f"singly_tail_{op}"],
-            output_path=SPEEDUP_DIR / "singly" / f"speedup_singly_{op}.png",
-        )
-        plot_speedup_tail_vs_no_tail(
-            family="doubly",
-            op=op,
-            no_tail_csv=list_impl_paths()[f"doubly_no_tail_{op}"],
-            tail_csv=list_impl_paths()[f"doubly_tail_{op}"],
+        plot_speedup(
+            title=f"Speedup Doubly con tail vs sin tail: {pretty_op_name(op)}",
+            faster_path=path_list_impl("doubly_tail", op),
+            slower_path=path_list_impl("doubly_no_tail", op),
             output_path=SPEEDUP_DIR / "doubly" / f"speedup_doubly_{op}.png",
+            faster_label="con tail",
+            slower_label="sin tail",
         )
+
+    print("Done. All advanced charts generated.")
 
 
 if __name__ == "__main__":
