@@ -19,6 +19,7 @@ public class BenchmarkRunner {
             long value = measuredRun.getAsLong();
             samples[i] = value;
             sum += value;
+
             if (value < min) {
                 min = value;
             }
@@ -28,6 +29,7 @@ public class BenchmarkRunner {
         }
 
         Arrays.sort(samples);
+
         long median;
         if (samples.length % 2 == 0) {
             int idx = samples.length / 2;
