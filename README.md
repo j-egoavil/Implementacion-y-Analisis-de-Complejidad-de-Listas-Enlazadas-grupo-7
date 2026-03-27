@@ -1,213 +1,257 @@
-# Implementacion y Analisis de Complejidad de Listas, Pilas y Colas en Java
+# Implementación y análisis de complejidad de listas, pilas y colas en Java
 
-## Descripcion
-Proyecto del curso Estructuras de Datos (2026-I) para implementar y analizar:
+## Descripción
+
+Proyecto del curso Estructuras de Datos (2026-I) orientado a la implementación y evaluación experimental de:
 
 - 4 variantes de listas enlazadas
-- stack basado en arreglo dinamico
-- queue basada en arreglo circular dinamico
+- una pila basada en arreglo dinámico
+- una cola basada en arreglo circular dinámico
 
-El proyecto combina analisis teorico Big-O con medicion experimental y graficas.
+Además de la implementación, el proyecto incluye benchmarks y scripts de generación de gráficas a partir de archivos CSV.
 
+---
+
+## Requisitos
+
+### Java
+- Java 21
+
+### Python
+- Python 3
+
+### Librerías de Python
+Los scripts de gráficas usan:
+
+- `pandas`
+- `matplotlib`
+
+Instalación sugerida:
+
+```bash
+pip install pandas matplotlib
+```
 ## Estructuras implementadas
 
 ### List
 
-Implementaciones:
+Implementaciones disponibles:
 
-- SinglyLinkedList
-- SinglyLinkedListTail
-- DoublyLinkedList
-- DoublyLinkedListTail
+ - SinglyLinkedList
+ - SinglyLinkedListTail
+ - DoublyLinkedList
+ - DoublyLinkedListTail
 
-Contrato de ListADT:
+Operaciones Benchmarkeadas: 
 
-- pushFront
-- pushBack
-- popFront
-- popBack
-- isEmpty
-- topFront
-- topBack
-- size
+- push_front
+- push_back
+- pop_front
+- pop_back
 - find
 - erase
-- addBefore
-- addAfter
-
-Nota: se usa abstraccion Position<T> para las operaciones basadas en referencia.
+- add_before
+- add_after
 
 ### Stack
 
-Implementacion: ArrayStack sobre DynamicArray.
+Implementación: 
 
-Metodos:
+- ArrayStack
+
+Operaciones Benchmarkeadas:
 
 - push
 - pop
 - peek
-- isEmpty
-- size
 - delete
 
 ### Queue
 
-Implementacion: CircularArrayQueue con resize dinamico.
+Implementación:
 
-Metodos:
+- CircularArrayQueue
+
+Operaciones Benchmarkeadas:
 
 - enqueue
 - dequeue
 - front
-- isEmpty
-- size
 - delete
 
-## Benchmarking actual
+## Configuración actual de los benchmark. 
 
-El paquete benchmark contiene:
+Los benchmarks usan actualmente:
 
-- BenchmarkRunner
-- BenchmarkStats
-- ListBenchmark
-- StackBenchmark
-- QueueBenchmark
+- 3 corridas de calentamiento (warmup)
+- 5 corridas medidas por tamaño de entrada
 
-### Configuracion por propiedades JVM
+### Tamaños de muestra.
 
-- benchmark.warmup (default: 3)
-- benchmark.repetitions (default: 5)
-- benchmark.include10pow8 (default: false)
+La suite trabaja con los siguientes tamaños:
 
-### Tamanos base actuales
+- 10
+- 100
+- 1_000
+- 10_000
+- 100_000
+- 1_000_000
+- 10_000_000
+- 100_000_000
 
-Con benchmark.include10pow8=false:
+### Formato de salida csv 
 
-- 10, 100, 1_000, 10_000, 100_000, 1_000_000
-
-Con benchmark.include10pow8=true:
-
-- 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000
-
-### Formato de CSV
-
-Los benchmarks guardan:
-
+Cada benchmark genera archivos con este encabezado:
+```bash
 size,avg_time_ns,median_ns,min_ns,max_ns
-
-## Estructura real del proyecto
-
 ```
-Implementacion-y-Analisis-de-Complejidad-de-Listas-Enlazadas-grupo-7/
-├── README.md
-├── data/
-│   ├── data-list/
-│   │   ├── list-singly/
-│   │   │   ├── no-tail/
-│   │   │   └── whit-tail/
-│   │   └── list-doubly/
-│   │       ├── no-tail/
-│   │       └── whit-tail/
-│   ├── data-stack/
-│   └── data-queue/
-├── docs/
-│   └── graficas/
-├── scripts/
-│   ├── graficar_resultados.py
-│   ├── graficar_comparacion.py
-│   └── graficar_avanzadas.py
-├── src/main/java/
-│   ├── Main.java
-│   ├── benchmark/
-│   ├── list/
-│   ├── stack/
-│   ├── queue/
-│   └── utils/
-└── tests/
+Los tiempos se almacenan en nanosegundos.
+
+### Advertencia importante sobre la ejecución
+
+Aunque el proyecto permite ejecutar toda la suite desde Main, los resultados pueden verse alterados si se ejecutan todos los benchmarks en una sola corrida, especialmente en operaciones pequeñas (O(1)), debido a:
+
+- presión de memoria
+- recolección de basura de la JVM
+- interferencia entre benchmarks previos
+- ruido adicional del entorno de ejecución
+- Recomendación
+
+Para obtener resultados más consistentes, se recomienda ejecutar los benchmarks método por método, dejando que cada corrida regenere su CSV correspondiente.
+
+## Compilación 
+
+Linux / macOS / Git Bash
+
+Desde la raíz del proyecto:
+
+```bash
+mkdir -p out
+find src/main/java -name "*.java" > sources.txt
+javac -d out @sources.txt
 ```
 
-## Ejecucion
+PowerShell (Windows)
 
-### Compilar
-
-PowerShell:
-
-```
+```bash
 $files = Get-ChildItem -Path src/main/java -Recurse -Filter *.java | Select-Object -ExpandProperty FullName
-& 'F:\Eclipse Adoptium\bin\javac.exe' -d out $files
+javac -d out $files
 ```
 
-### Ejecutar suite completa
+## Ejecución 
 
-```
-& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main
-```
+Ejecutar la suite completa 
 
-### Ejecutar benchmark selectivo
-
-Stack:
-
-```
-& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main stack push
+```bash
+java -cp out Main
 ```
 
-Queue:
+No es la opción recomendada para la generación final de resultados si se busca máxima consistencia en los benchmarks.
 
+## Ejecutar Benchmark individuales.
+
+### Stack 
+
+Ejemplos: 
+
+```bash
+java -cp out Main stack push
+java -cp out Main stack pop
+java -cp out Main stack peek
+java -cp out Main stack delete
 ```
-& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main queue delete
+
+### Queue
+
+Ejemplos:
+
+```bash
+java -cp out Main queue enqueue
+java -cp out Main queue dequeue
+java -cp out Main queue front
+java -cp out Main queue delete
 ```
 
-List:
+### List
 
+Formato general:
+
+```bash
+java -cp out Main list <implementacion> <operacion>
 ```
-& 'F:\Eclipse Adoptium\bin\java.exe' -cp out Main list singly push_front
+
+Implementaciones válidas:
+
+- singly
+- singly_tail
+- doubly
+- doubly_tail
+
+Ejemplos: 
+
+```bash
+java -cp out Main list singly push_front
+java -cp out Main list singly pop_front
+java -cp out Main list singly add_after
+
+java -cp out Main list singly_tail push_back
+java -cp out Main list singly_tail pop_front
+
+java -cp out Main list doubly erase
+java -cp out Main list doubly add_before
+java -cp out Main list doubly add_after
+
+java -cp out Main list doubly_tail push_back
+java -cp out Main list doubly_tail pop_back
 ```
 
-## Graficas
+### Flujo recomendado. 
+1. Compilar el proyecto.
+2. Ejecutar los benchmarks uno por uno.
+3. Verificar que los CSV se hayan actualizado correctamente.
+4. Ejecutar los scripts de Python para regenerar las gráficas.
 
-### Scripts disponibles
+### Generación de gráficas. 
 
+Scripts disponibles
 - scripts/graficar_resultados.py
 - scripts/graficar_comparacion.py
 - scripts/graficar_avanzadas.py
 
-### Ejecutar generacion completa de graficas
+Ejecución
 
-Desde la raiz del proyecto:
+Desde la raíz del proyecto:
 
-```powershell
-f:/repos/pruebas/.venv/Scripts/python.exe scripts/graficar_resultados.py
-f:/repos/pruebas/.venv/Scripts/python.exe scripts/graficar_comparacion.py
-f:/repos/pruebas/.venv/Scripts/python.exe scripts/graficar_avanzadas.py
+```bash
+python3 scripts/graficar_resultados.py
+python3 scripts/graficar_comparacion.py
+python3 scripts/graficar_avanzadas.py
 ```
 
-Las imagenes se guardan en:
+Si tu sistema usa python en lugar de python3:
 
-- docs/graficas/individuales/
-- docs/graficas/comparaciones/
-- docs/graficas/avanzadas/
+```bash
+python scripts/graficar_resultados.py
+python scripts/graficar_comparacion.py
+python scripts/graficar_avanzadas.py
+```
 
-### Tipos de salida
+### Salidas generadas por los scripts
 
-- individuales
-- comparaciones
-- avanzadas (pendiente log-log, speedup tail/no-tail, heatmaps y lineas por operacion)
+Los scripts regeneran gráficas a partir de los CSV ya existentes.
 
-## Cambios recientes
+Tipos de salida:
 
-- Se ejecuto la suite completa de benchmarks con `Main` y se regeneraron los CSV en `data/`.
-- Se ejecuto `scripts/graficar_resultados.py` para reconstruir las graficas individuales.
-- Quedo documentado el flujo completo para volver a generar todas las graficas (individuales, comparativas y avanzadas).
+- gráficas individuales
+- gráficas comparativas
+- gráficas avanzadas
 
-## Notas internas por paquete
+Entre las salidas disponibles se incluyen comparaciones por método, comparaciones entre implementaciones, pendientes log-log, speedups y heatmaps.
 
-Documentacion tecnica adicional:
-
-- src/main/java/list/NotasInternasListas.md
-- src/main/java/benchmark/README.md
-- src/main/java/queue/README.md
-- src/main/java/stack/README.md
-- src/main/java/utils/README.md
+### Notas de uso.
+- Si una gráfica no se genera, revisa primero que el CSV correspondiente exista y no esté vacío.
+- Si cambias la metodología o vuelves a ejecutar benchmarks, conviene regenerar todas las gráficas para mantener consistencia.
+- Si una operación presenta resultados extraños al correr la suite completa, vuelve a ejecutarla de forma individual antes de aceptar ese CSV como definitivo.
 
 ## Integrantes
 
